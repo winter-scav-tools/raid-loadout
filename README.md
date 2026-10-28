@@ -2,7 +2,7 @@
 
 A fan-made raid packing tool for **The Forever Winter**.
 
-Current version: **v1.0** · Live page: https://winter-scav-tools.github.io/loadout/
+Current version: **v1.01** · Live page: https://winter-scav-tools.github.io/raid-loadout/
 
 - **Ammo for your route:** pick your target region and how you get there. A short hop into Scorched Enclave needs less than a long tunnel run to Elephant Mausoleum. The page shows how the count was worked out.
 - **Weapons and parts:** pick the parts on your gun from a list. The magazine decides how ammo is counted, and every change shows green (better) or red (worse).
@@ -11,14 +11,15 @@ Current version: **v1.0** · Live page: https://winter-scav-tools.github.io/load
 - **Meds and food:** swap Advanced kits for what you actually have.
 - **Where to get it:** vendor, loyalty level and loot spots for everything on your list.
 - **Stash Ledger goal:** if you use the [Stash Ledger](https://winter-scav-tools.github.io/stash-ledger/) on the same browser, your raid goal shows up here and the page keeps room for it.
+- **Sync:** turn on Sync in the [Stash Ledger](https://winter-scav-tools.github.io/stash-ledger/) and your loadout plan syncs too. One code covers both tools, no account.
 - **Share link:** copy a link to your loadout (route, guns, scav and rig; not your goal).
 - **Rookie and Veteran mode:** Rookie explains every step, Veteran is just the numbers.
-- **Spoiler-free mode:** hides endgame weapons, story goals and regions you haven't reached. Tap a blurred name to peek.
+- **Spoiler-free mode:** hides the endgame weapons and story quest names. Tap a blurred name to peek.
 - **Colorblind mode:** swaps red and amber for yellow and blue.
 
 Numbers marked **?** are our estimate or not checked in-game yet. Ammo counts start from what players post and a guess of fights per region. If you used more or less on a run, or something's wrong in-game, open an issue.
 
-Your choices are saved in your own browser only. The page reads your Stash Ledger goal but never changes the ledger.
+Your choices are saved in your own browser, and synced only if you turned on Sync in the Stash Ledger. The page reads your Stash Ledger goal but never changes the ledger's own data.
 
 ## Credits
 
