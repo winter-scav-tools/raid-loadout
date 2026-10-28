@@ -1,0 +1,945 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Fan-made raid packing tool for The Forever Winter: how much ammo, meds and rig space to bring for your route, plus weapon stats.">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>Forever Winter Raid Loadout</title>
+<meta name="color-scheme" content="dark">
+<meta name="darkreader-lock">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@400;500;700&display=swap">
+<style>
+/* Layout: same Innards terminal as the Stash Ledger. CRT header, spoiler banner, then a workbench: the plan on the left (route, guns, rig, style), the manifest on the right (what to pack and how full the rig gets). Dark-only by design, like the game's menus. */
+:root{
+  --bg:#0b0f10; --panel:#121819; --panel2:#1a2223; --line:#2a3436; --rail:#3a4547;
+  --ink:#dfe4e2; --muted:#8b9895; --dim:#7a8784;
+  --red:#ee3b27; --amber:#e7a33e; --frost:#8fb9bd; --good:#5fd38a;
+  --f-display:"VT323","Courier New",monospace;
+  --f-body:"JetBrains Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  color-scheme:dark;
+}
+@media (prefers-color-scheme:dark){:root{color-scheme:dark}}
+@media (prefers-color-scheme:light){:root{color-scheme:dark}}
+[hidden]{display:none!important}
+:root[data-cb="1"]{--red:#f2c230; --amber:#5ab4f0; --frost:#c7cfcd; --good:#5ab4f0}
+*,*::before,*::after{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:14px/1.55 var(--f-body);margin:0}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+a{color:var(--frost)} a:hover{color:var(--ink)}
+:focus-visible{outline:2px solid var(--red);outline-offset:2px}
+.wrap{max-width:1240px;margin:0 auto;padding-block:32px 64px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));
+  display:flex;flex-direction:column;gap:28px}
+.scan{background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.035) 0 1px,transparent 1px 3px)}
+.blink{display:inline-block;width:.55em;height:.8em;background:var(--red);vertical-align:-.04em;margin-left:.15em;animation:blink 1.1s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.blink{animation:none}}
+.num{font-variant-numeric:tabular-nums}
+
+/* header (same as the ledger) */
+.hdr{display:flex;flex-direction:column;gap:10px;padding:28px 28px 24px;background-color:var(--panel);border:1px solid var(--line)}
+.hrow{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:12px}
+.eyebrow{font:20px/1 var(--f-display);letter-spacing:.08em;color:var(--muted)}
+.fanbadge{font:18px/1 var(--f-display);letter-spacing:.1em;color:var(--ink);border:1px dashed var(--muted);padding:4px 10px}
+h1{margin:0;font:400 clamp(48px,9vw,84px)/.9 var(--f-display);letter-spacing:.02em;text-wrap:balance}
+.hdr p{margin:0;max-width:72ch;color:var(--muted)}
+.hdr .support{color:var(--ink);font-size:13px;display:flex;flex-wrap:wrap;gap:6px 14px;align-items:center;border-top:1px solid var(--line);padding-top:12px;margin-top:4px}
+.hdr .support b{font:20px/1 var(--f-display);letter-spacing:.06em;color:var(--red);font-weight:400}
+.hdr .support a{font-weight:500}
+h2{margin:0;font:400 30px/1 var(--f-display);letter-spacing:.04em;text-transform:uppercase;text-wrap:balance}
+h2::before{content:"> ";color:var(--red)}
+h3{margin:0;font:400 20px/1.1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+
+/* spoiler-free banner + view options (same as the ledger) */
+.sfbtn{width:100%;display:flex;align-items:center;gap:18px;text-align:left;padding:16px 20px;background:var(--panel);color:var(--ink);border:2px solid var(--red);cursor:pointer;font:inherit}
+.sfbtn:hover{background:var(--panel2)}
+.sfbtn .bang{flex:none;display:grid;place-items:center;width:48px;height:48px;background:var(--red);color:var(--bg);font:44px/1 var(--f-display)}
+.sfbtn .txt{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1}
+.sfbtn .txt strong{font:400 34px/1 var(--f-display);letter-spacing:.04em;text-transform:uppercase;color:var(--red)}
+.sfbtn .txt span{font-size:13px;color:var(--muted)}
+.sfbtn .state{flex:none;font:28px/1 var(--f-display);letter-spacing:.1em;color:var(--muted)}
+.sfbtn[aria-pressed="true"]{background-color:var(--red);color:var(--bg);background-image:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px)}
+.sfbtn[aria-pressed="true"] .bang{background:var(--bg);color:var(--red)}
+.sfbtn[aria-pressed="true"] .txt strong,.sfbtn[aria-pressed="true"] .state{color:var(--bg)}
+.sfbtn[aria-pressed="true"] .txt span{color:var(--bg);font-weight:500}
+.viewopts{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-top:-10px}
+.cbbtn{display:inline-flex;white-space:nowrap;max-width:100%;align-items:center;gap:10px;font:20px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:6px 12px;border:1px solid var(--rail);background:var(--panel);color:var(--ink);cursor:pointer}
+.cbbtn:hover{border-color:var(--ink)}
+.cbbtn b{font-weight:400;color:var(--muted)}
+.cbbtn .dot{width:22px;height:10px;background:linear-gradient(90deg,var(--red) 50%,var(--amber) 50%)}
+.cbbtn[aria-pressed="true"]{border-color:var(--red)}
+.cbbtn[aria-pressed="true"] b{color:var(--red)}
+.cbhint{font-size:12px;color:var(--muted)}
+@media (max-width:560px){.cbbtn{font-size:18px;gap:8px;padding:6px 10px}.sfbtn{gap:12px;padding:12px 14px}.sfbtn .txt strong{font-size:26px}.sfbtn .bang{width:38px;height:38px;font-size:34px}.sfbtn .state{display:none}}
+.spoil{filter:blur(5px);cursor:pointer;background:var(--line);transition:filter .15s}
+.spoil.shown{filter:none;background:none}
+@media (prefers-reduced-motion:reduce){.spoil{transition:none}}
+.unsure{display:inline-grid;place-items:center;min-width:16px;height:16px;padding:0 3px;margin-left:4px;border:1px solid var(--amber);color:var(--amber);font:16px/1 var(--f-display);vertical-align:1px;cursor:help}
+
+/* mode switch: rookie / veteran */
+.mode{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--rail);background:var(--panel)}
+.mode button{display:flex;flex-direction:column;gap:2px;align-items:flex-start;text-align:left;padding:12px 16px;border:0;background:transparent;color:var(--muted);cursor:pointer;font:inherit}
+.mode button+button{border-left:1px solid var(--rail)}
+.mode button b{font:400 26px/1 var(--f-display);letter-spacing:.06em;color:var(--ink)}
+.mode button span{font-size:12px}
+.mode button[aria-pressed="true"]{background:var(--panel2);box-shadow:inset 0 -3px 0 var(--red)}
+.mode button[aria-pressed="true"] b{color:var(--red)}
+
+/* workbench */
+.bench{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:900px){.bench{grid-template-columns:minmax(0,1fr)}}
+.plan{display:flex;flex-direction:column;gap:16px;min-width:0}
+.step{background:var(--panel);border:1px solid var(--line);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.step h3{display:flex;align-items:baseline;gap:10px;color:var(--ink)}
+.step h3 .n{color:var(--red)}
+.step h3 small{margin-left:auto;font:12px var(--f-body);letter-spacing:0;text-transform:none;color:var(--muted)}
+:root[data-mode="vet"] .step h3 .n{display:none}
+.why{margin:0;color:var(--muted);font-size:13px;max-width:62ch}
+:root[data-mode="vet"] .why,:root[data-mode="vet"] .rk{display:none!important}
+:root[data-mode="rookie"] .vk{display:none!important}
+.field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.field>label,.flabel{font:18px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.row2{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(150px,100%),1fr));gap:12px}
+select,input[type="number"]{width:100%;min-width:0;background:var(--bg);color:var(--ink);border:1px solid var(--rail);padding:9px 10px;font:14px var(--f-body);border-radius:0}
+select:hover,input[type="number"]:hover{border-color:var(--muted)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);border:1px solid var(--rail)}
+.seg button{padding:10px 6px;border:0;background:var(--bg);color:var(--muted);cursor:pointer;font:20px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.seg button+button{border-left:1px solid var(--rail)}
+.seg button[aria-pressed="true"]{background:var(--red);color:var(--bg)}
+.seg.v button{display:flex;flex-direction:column;gap:3px;align-items:center}
+.seg.v button small{font:11px var(--f-body);letter-spacing:0;text-transform:none}
+.check{display:flex;gap:10px;align-items:flex-start;font-size:13px;cursor:pointer}
+.check input{accent-color:var(--red);width:16px;height:16px;margin:2px 0 0;flex:none}
+.hint{font-size:12px;color:var(--muted)}
+.term{display:inline;padding:0 3px;border:0;border-bottom:1px dashed var(--frost);background:none;color:var(--frost);font:inherit;cursor:help}
+.term[aria-expanded="true"]{color:var(--ink);border-bottom-style:solid}
+.defbox{border-left:3px solid var(--frost);background:var(--panel2);padding:8px 12px;font-size:13px;color:var(--ink)}
+.defbox b{font:400 18px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--frost);margin-right:6px}
+
+/* route chain */
+.chain{display:flex;flex-wrap:wrap;align-items:stretch;gap:6px}
+.leg{display:flex;flex-direction:column;gap:2px;padding:7px 10px;border:1px solid var(--rail);background:var(--bg);min-width:0}
+.leg b{font:400 20px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;overflow-wrap:anywhere}
+.leg small{font-size:11px;color:var(--muted)}
+.leg.tun{border-style:dashed}
+.leg.tgt{border-color:var(--red)}
+.leg.tgt b{color:var(--red)}
+.arrow{align-self:center;color:var(--dim);font:20px/1 var(--f-display)}
+.mids{display:flex;flex-direction:column;gap:8px}
+.reached{display:flex;flex-wrap:wrap;gap:6px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:4px 8px;border:1px solid var(--rail);background:var(--bg);color:var(--muted);font:12px var(--f-body);cursor:pointer}
+.chip[aria-pressed="true"]{color:var(--ink);border-color:var(--frost)}
+.chip i{font-style:normal;color:var(--dim)}
+
+/* weapon card */
+.wcard{display:flex;flex-direction:column;gap:10px;border:1px solid var(--line);background:var(--bg);padding:12px}
+.wcard .wn{display:flex;flex-wrap:wrap;justify-content:space-between;gap:6px;align-items:baseline}
+.wcard .wn b{font:400 28px/1 var(--f-display);letter-spacing:.04em}
+.wcard .wn span{font-size:12px;color:var(--muted)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(120px,100%),1fr));gap:8px 14px;margin:0}
+.stats div{display:flex;flex-direction:column;gap:1px;min-width:0}
+.stats dt{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+.stats dd{margin:0;font-variant-numeric:tabular-nums}
+.stats dd small{color:var(--muted)}
+.parts{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(180px,100%),1fr));gap:10px 12px;border:1px solid var(--line);background:var(--bg);padding:12px}
+.parts .ph{grid-column:1/-1;display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:12px;color:var(--muted)}
+.parts .ph b{font:400 18px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--ink)}
+.parts select{background:var(--panel)}
+.need{font-size:12px;color:var(--red)}
+.fixed{font-size:13px;color:var(--ink);padding:9px 0}
+.att{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:8px;display:flex;flex-direction:column;gap:4px}
+.att b{color:var(--ink);font-weight:500}
+
+/* manifest */
+.manifest{background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;min-width:0;position:sticky;top:calc(env(safe-area-inset-top,0px) + 12px)}
+@media (max-width:900px){.manifest{position:static}}
+.mhead{padding:18px 18px 14px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:10px}
+.mhead .rt{font-size:12px;color:var(--muted)}
+.big{display:flex;flex-wrap:wrap;gap:8px 28px;align-items:flex-end}
+.big div{display:flex;flex-direction:column;gap:2px}
+.big b{font:400 56px/.85 var(--f-display);color:var(--red);font-variant-numeric:tabular-nums}
+.big span{font-size:12px;color:var(--muted)}
+.capbar{display:flex;height:22px;border:1px solid var(--rail);background:var(--bg);overflow:hidden}
+.capbar i{display:block;height:100%}
+.capbar .pk{background:var(--amber)}
+.capbar .gl{background:repeating-linear-gradient(135deg,var(--red) 0 6px,transparent 6px 10px)}
+.capbar .ov{background:var(--red)}
+.kgbar{height:10px;margin-top:-6px}
+.mods{display:flex;flex-wrap:wrap;gap:6px}
+.mod{display:flex;flex-direction:column;gap:1px;align-items:flex-start;padding:6px 10px;border:1px solid var(--rail);background:var(--bg);color:var(--muted);cursor:pointer;font:12px var(--f-body);min-width:92px}
+.mod b{font:400 20px/1 var(--f-display);color:var(--ink);letter-spacing:.06em}
+.mod[aria-pressed="true"]{border-color:var(--amber);color:var(--ink)}
+.mod[aria-pressed="true"] b{color:var(--amber)}
+.modall{align-self:stretch;padding:6px 10px;border:1px dashed var(--rail);background:transparent;color:var(--muted);font:12px var(--f-body);cursor:pointer}
+.stamp{font-size:12px;color:var(--muted);border-top:1px solid var(--line);padding-top:10px}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:12px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:12px;height:12px;display:inline-block;border:1px solid var(--rail)}
+.legend .pk{background:var(--amber)} .legend .gl{background:repeating-linear-gradient(135deg,var(--red) 0 3px,transparent 3px 5px)} .legend .fr{background:var(--bg)}
+.warn{border:1px solid var(--red);color:var(--ink);padding:8px 12px;font-size:13px}
+.warn b{color:var(--red);font-weight:500}
+.msec{padding:14px 18px;border-bottom:1px solid var(--line);display:flex;flex-direction:column;gap:8px;min-width:0}
+.msec:last-child{border-bottom:0}
+.pack{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.pack li{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 14px;align-items:baseline;padding:8px 0;border-top:1px dashed var(--line)}
+.pack li:first-child{border-top:0}
+.pack .q{font:400 22px/1 var(--f-display);color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;min-width:4ch}
+.pack .cu{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;min-width:7ch}
+.pack .nm{min-width:0;overflow-wrap:anywhere}
+.pack .nm small{display:block;color:var(--muted);font-size:12px}
+.pack select.swap{width:auto;max-width:100%;padding:3px 6px;font-size:13px;background:var(--panel);margin-bottom:2px}
+.pack li.flag .nm::before{content:"! ";color:var(--red);font-weight:700}
+.pack label.check{grid-column:1/-1}
+.math{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:3px}
+.math code{font:inherit;color:var(--ink)}
+.up{color:var(--good)} .dn{color:var(--red)}
+.stats dd small.up,.stats dd small.dn{font-weight:500}
+.chg{grid-column:1/-1;font-size:12px;border-left:3px solid var(--rail);padding:4px 10px;background:var(--panel)}
+.chg b{color:var(--ink);font-weight:500}
+details.fold>summary{cursor:pointer;list-style:none;display:flex;align-items:baseline;gap:10px}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary::before{content:"+";color:var(--red);font:400 22px/1 var(--f-display);width:12px}
+details.fold[open]>summary::before{content:"−"}
+details.fold>summary small{color:var(--muted);font-size:12px}
+.gets{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.gets li{display:flex;flex-direction:column;gap:2px;padding:8px 0;border-top:1px dashed var(--line);font-size:13px;min-width:0}
+.gets li:first-child{border-top:0}
+.gets .gn{color:var(--ink);overflow-wrap:anywhere}
+.gets .gn small{color:var(--muted)}
+.gets .gb,.gets .gl{font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.gets .gb b{color:var(--ink);font-weight:500}
+.reps{display:flex;flex-direction:column;gap:8px;font-size:13px}
+.rep{border-left:3px solid var(--frost);padding:4px 10px;background:var(--panel2)}
+.rep b{color:var(--ink);font-weight:500}
+.tips{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px;font-size:13px}
+.tips li::marker{color:var(--red)}
+.empty{color:var(--muted);font-size:13px}
+.src{font-size:12px;color:var(--dim)}
+.share{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.share button{font:18px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:7px 12px;border:1px solid var(--rail);background:var(--bg);color:var(--ink);cursor:pointer}
+.share button:hover{border-color:var(--ink)}
+.share input{flex:1 1 220px;min-width:0;background:var(--bg);color:var(--ink);border:1px solid var(--rail);padding:6px 8px;font:12px var(--f-body)}
+.share span{font-size:12px;color:var(--muted)}
+.loaded{border:1px solid var(--frost);padding:8px 12px;font-size:13px;display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center}
+.loaded button{font:16px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:5px 10px;border:1px solid var(--rail);background:var(--bg);color:var(--ink);cursor:pointer}
+@media (max-width:560px){.pack li{grid-template-columns:minmax(0,1fr) auto}.pack .cu{grid-column:1/-1;text-align:left}}
+
+/* phone summary bar */
+.mbar{display:none}
+@media (max-width:900px){
+  .mbar{display:flex;position:fixed;left:0;right:0;bottom:0;z-index:15;align-items:center;justify-content:space-between;gap:10px;background:var(--panel);border-top:2px solid var(--red);
+    padding:10px max(16px,env(safe-area-inset-right,0px)) calc(10px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));
+    background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.025) 0 1px,transparent 1px 3px)}
+  .mbar span{font:22px/1 var(--f-display);letter-spacing:.04em;font-variant-numeric:tabular-nums}
+  .mbar a{font:20px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--bg);background:var(--red);padding:8px 12px;text-decoration:none}
+  .wrap{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+}
+
+footer{color:var(--muted);font-size:12px;display:flex;flex-direction:column;gap:6px;max-width:80ch;border-top:1px solid var(--line);padding-top:16px}
+footer b{color:var(--ink)}
+.fnotes>summary{cursor:pointer;color:var(--ink);width:max-content;max-width:100%}
+.fnotes>span{display:block;margin-top:6px}
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<header class="hdr scan">
+  <div class="hrow"><span class="eyebrow">&gt; THE FOREVER WINTER · RAID PACKING GUIDE</span><span class="fanbadge">FAN-MADE · UNOFFICIAL</span></div>
+  <h1>&gt; RAID LOADOUT<span class="blink" aria-hidden="true"></span></h1>
+  <p>Pick where you're going, what you're carrying and how you play. You get how much ammo, meds and food to bring, the gear that route needs, and how much rig space is left for loot. If you use the <a href="../stash-ledger/">Stash Ledger</a>, your raid goal shows up here too.</p>
+  <p class="stamp">Data: The Forever Winter Wiki, pulled 28 Oct 2026 · game patch 0.9.5.3 · water costs from the in-game map, Oct 2026</p>
+  <p class="support"><b>SUPPORT THE DEVS</b><span>This is a fan project, not made by Fun Dog Studios. Get the game on</span><a href="https://store.steampowered.com/app/2828860/The_Forever_Winter/" target="_blank" rel="noopener">Steam</a><a href="https://store.epicgames.com/en-US/p/the-forever-winter-8b8280" target="_blank" rel="noopener">Epic Games Store</a><span>·</span><a href="https://www.fundogstudios.com/" target="_blank" rel="noopener">Fun Dog Studios</a></p>
+</header>
+
+<button class="sfbtn" id="sfbtn" type="button" aria-pressed="false"><span class="bang" aria-hidden="true">!</span><span class="txt"><strong>Spoiler-free mode</strong><span id="sfsub">Turn on to hide endgame weapons, story goals and regions you haven't reached. Tap any blurred name to peek.</span></span><span class="state" id="sfstate">[ OFF ]</span></button>
+<div class="viewopts"><button class="cbbtn" id="cbbtn" type="button" aria-pressed="false"><span class="dot" aria-hidden="true"></span>Colorblind mode <b id="cbstate">[ OFF ]</b></button><span class="cbhint">Swaps the red and amber for yellow and blue.</span></div>
+
+<div class="mode" role="group" aria-label="How much explanation">
+  <button type="button" id="m-rookie" aria-pressed="true"><b>ROOKIE</b><span>Walks you through it and explains every term.</span></button>
+  <button type="button" id="m-vet" aria-pressed="false"><b>VETERAN</b><span>Just the numbers, all on one screen.</span></button>
+</div>
+
+<div class="bench">
+<div class="plan">
+
+  <section class="step" id="s-route" aria-labelledby="h-route">
+    <h3 id="h-route"><span class="n">1</span>Route<small id="routesum"></small></h3>
+    <p class="why">Where you're going decides most of what you pack. Every region you pass through is another set of fights, so a long <button class="term" type="button" data-t="tunnel" aria-expanded="false">tunnel</button> run needs more ammo than a quick hop into one region.</p>
+    <div class="defbox" hidden></div>
+    <div class="field"><label for="target">Target region</label><select id="target"></select></div>
+    <div class="field"><span class="flabel" id="vialbl">How you get there</span>
+      <div class="seg v" id="via" role="group" aria-labelledby="vialbl">
+        <button type="button" data-v="walk" aria-pressed="true">Walk<small>tunnels from A</small></button>
+        <button type="button" data-v="tunnel" aria-pressed="false">Tunnel<small>fast travel in</small></button>
+        <button type="button" data-v="direct" aria-pressed="false">Direct<small>fast travel</small></button>
+      </div>
+    </div>
+    <div class="field" id="viatunf" hidden><label for="viatun">Fast travel to</label><select id="viatun"></select></div>
+    <div class="mids" id="mids"></div>
+    <p class="hint" style="margin:0">Night Shift (dark, foggy, more cyborgs) can't be seen before you drop in. The spare fight in the ammo count covers some of it, and the rig light on your list covers the dark.</p>
+    <div class="chain" id="chain" aria-label="Your route"></div>
+    <p class="why" id="viawhy"></p>
+    <div class="field" id="reachf" hidden><span class="flabel">Regions you've reached</span><div class="reached" id="reached"></div><span class="hint">Spoiler-free hides regions you haven't reached yet. Tap one once you've been there.</span></div>
+  </section>
+
+  <section class="step" id="s-guns" aria-labelledby="h-guns">
+    <h3 id="h-guns"><span class="n">2</span>Weapons</h3>
+    <p class="why">Ammo is counted per weapon. Bigger calibers take more rig space per round, so the same 120 rounds can cost twice the room. A <button class="term" type="button" data-t="sup" aria-expanded="false">suppressor</button> keeps fights small, which matters more here than raw damage. Pick the parts you actually have on the gun: the magazine decides how the ammo is counted.</p>
+    <p class="why">Not sure what to take? The all-rounder players name most is the AK or RPK: cheap ammo, big magazines, and it takes a suppressor. A grenade launcher as second weapon is the usual answer to exos and tanks.</p>
+    <div class="defbox" hidden></div>
+    <div class="row2">
+      <div class="field"><label for="prim">Main weapon</label><select id="prim"></select></div>
+      <div class="field"><label for="pammo">Ammo</label><select id="pammo"></select></div>
+    </div>
+    <div class="parts" id="parts"></div>
+    <div class="row2">
+      <div class="field"><label for="sec">Second weapon</label><select id="sec"></select></div>
+      <div class="field" id="secmagf"><label for="secmag">Second weapon magazine</label><select id="secmag"></select></div>
+    </div>
+    <div id="gunwarn"></div>
+    <div class="row2">
+      <div class="field"><label for="gren">Grenades</label><select id="gren"><option value="">None</option><option>Frag Grenade</option><option>Cluster Grenade</option></select></div>
+      <div class="field" id="grenqf"><label for="grenq">How many</label><select id="grenq"></select></div>
+    </div>
+    <div class="wcard" id="wcard"></div>
+  </section>
+
+  <section class="step" id="s-rig" aria-labelledby="h-rig">
+    <h3 id="h-rig"><span class="n">3</span>Rig</h3>
+    <p class="why">Pick your scav first: it decides which rigs you can use and how much you carry. Your rig is your inventory for the whole raid. Everything you bring in takes <button class="term" type="button" data-t="cu" aria-expanded="false">CU</button> (rig space), and whatever you pack is space you can't fill with loot.</p>
+    <div class="defbox" hidden></div>
+    <div class="row2">
+      <div class="field"><label for="char">Scav</label><select id="char"></select><span class="hint" id="charhint"></span></div>
+      <div class="field"><label for="rig">Rig</label><select id="rig"></select><span class="hint" id="righint"></span></div>
+    </div>
+    <div class="row2" id="skillrow">
+      <div class="field"><label for="pres">Prestige</label><select id="pres"></select></div>
+      <div class="field"><label for="pq">Personal Quarters</label><select id="pq"><option value="0">Not built / no buff</option><option value="10">Upgrade V1 · +10% HP</option><option value="15">Upgrade V2 · +15% HP</option><option value="25">Upgrade V3 · +25% HP</option></select></div>
+      <div class="field" id="carryf"><label for="carry">Carry skill</label><select id="carry"></select><span class="hint" id="carryhint"></span></div>
+      <div class="field" id="medf"><label for="medsk">Medical Expert skill</label><select id="medsk"></select></div>
+    </div>
+    <div class="field"><span class="flabel">Container modules</span>
+      <div class="mods" id="mods"></div>
+      <span class="hint" id="modhint"></span>
+    </div>
+    <p class="why">Each container module comes in low or high quality at Bundleton. High quality doubles its space and weight limit. Weight slows you down, and you can't carry past the limit. Large item bins hold either equipment (rig light, turret, tac cam) or one large loot item, so they're shared.</p>
+  </section>
+
+  <section class="step" id="s-style" aria-labelledby="h-style">
+    <h3 id="h-style"><span class="n">4</span>Playstyle</h3>
+    <p class="why">How many <button class="term" type="button" data-t="fight" aria-expanded="false">fights</button> you expect. Sneaking past the war needs far less ammo than clearing it.</p>
+    <div class="defbox" hidden></div>
+    <div class="seg v" id="style" role="group" aria-label="Playstyle">
+      <button type="button" data-v="sneak" aria-pressed="false">Sneak<small>avoid fights</small></button>
+      <button type="button" data-v="normal" aria-pressed="true">Normal<small>fight when needed</small></button>
+      <button type="button" data-v="loud" aria-pressed="false">Loud<small>clear the area</small></button>
+    </div>
+  </section>
+
+  <section class="step" id="s-goal" aria-labelledby="h-goal">
+    <h3 id="h-goal"><span class="n">5</span>Goal loot<small>optional</small></h3>
+    <p class="why">If you're farming for an Innards upgrade or a quest, the tool keeps rig space free for it. Your Stash Ledger goal is picked up on its own.</p>
+    <div class="field"><label for="goal">Goal</label><select id="goal"></select><span class="hint" id="goalhint"></span></div>
+  </section>
+
+</div>
+
+<aside class="manifest" id="manifest" aria-labelledby="h-man">
+  <div class="mhead scan">
+    <h2 id="h-man">Manifest</h2>
+    <span class="rt" id="mroute"></span>
+    <div class="big">
+      <div><b id="bigammo">0</b><span id="bigammol">rounds</span></div>
+      <div><b id="bigfree">0</b><span>CU free for loot</span></div>
+      <div><b id="bigkg">0</b><span>kg left to carry</span></div>
+    </div>
+    <div class="capbar" id="capbar" role="img"></div>
+    <div class="capbar kgbar" id="kgbar" role="img"></div>
+    <div class="legend"><span><i class="pk"></i>Packed <b class="num" id="lgpk"></b></span><span><i class="gl"></i>Goal loot <b class="num" id="lggl"></b></span><span><i class="fr"></i>Free <b class="num" id="lgfr"></b></span><span>of <b class="num" id="lgcap"></b> CU · <b class="num" id="lgkg"></b> kg</span></div>
+    <div id="mwarn"></div>
+    <div class="loaded" id="loaded" hidden><span>You opened a shared loadout. Your own saved plan was replaced.</span><button type="button" id="undoshare">Undo</button></div>
+    <div class="share"><button type="button" id="sharebtn">Copy share link</button><input id="shareurl" readonly hidden aria-label="Share link"><span id="sharemsg" role="status"></span></div>
+  </div>
+  <div class="msec"><h3>Pack this</h3><ul class="pack" id="pack"></ul></div>
+  <div class="msec"><h3>Rig layout</h3><div id="layout" style="display:flex;flex-direction:column;gap:8px"></div></div>
+  <div class="msec"><h3>How the ammo was counted</h3><div class="math" id="math"></div></div>
+  <div class="msec" id="gearsec"><h3>Route notes</h3><ul class="tips" id="tips"></ul></div>
+  <div class="msec" id="goalsec"><h3>Room for goal loot</h3><div id="goalbox"></div></div>
+  <div class="msec rk"><h3>Before you drop</h3><div class="pack" id="drop"></div></div>
+  <details class="msec fold" id="getsec"><summary><h3>Where to get it</h3><small>vendors, loyalty and loot spots</small></summary><div id="getbox" style="display:flex;flex-direction:column;gap:12px;margin-top:8px"></div></details>
+</aside>
+</div>
+
+<footer>
+  <span><b>?</b> = our estimate, not from the wiki. Ammo and med counts start from what players post (at least 3 mags, Advanced kits) and our guess of fights per region, until players report real numbers. Used more or less on a run? <a href="https://github.com/winter-scav-tools/loadout/issues/new" target="_blank" rel="noopener">Tell us in an issue</a></span>
+  <span><b>Unofficial fan-made tool,</b> not affiliated with Fun Dog Studios. Support the devs: <a href="https://store.steampowered.com/app/2828860/The_Forever_Winter/" target="_blank" rel="noopener">Steam</a> · <a href="https://store.epicgames.com/en-US/p/the-forever-winter-8b8280" target="_blank" rel="noopener">Epic Games Store</a> · <a href="https://www.fundogstudios.com/" target="_blank" rel="noopener">fundogstudios.com</a></span>
+  <span>Raid Loadout v1.0 · <b>Made by scavs, for scavs,</b> part of <a href="https://github.com/winter-scav-tools" target="_blank" rel="noopener">Winter Scav Tools</a> · Built with help from Claude (AI), no AI art · Data from <a href="https://theforeverwinter.wiki.gg/" target="_blank" rel="noopener">The Forever Winter Wiki</a> under <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, checked 28 Oct 2026</span>
+  <details class="fnotes"><summary>How to read this page</summary>
+    <span>Weapon stats, weapon parts, ammo sizes, rig sizes and med kits come from the wiki. Region difficulty comes from player opinions and is marked ?.</span>
+    <span>The in-game weapon stat card is often wrong. The wiki says only accuracy and magazine size visibly change how a gun performs, so that's what we show.</span>
+    <span>Your choices are saved in this browser only. The page reads your Stash Ledger goal but never changes the ledger.</span>
+  </details>
+</footer>
+</div>
+
+<div class="mbar" aria-hidden="true"><span id="mbtxt"></span><a href="#manifest" tabindex="-1">MANIFEST</a></div>
+
+<script>
+/* ---------- data (The Forever Winter Wiki, CC BY-SA 4.0, checked 28 Oct 2026) ---------- */
+// ammo: [name, kg per round, CU per round, headshot mult]
+const AMMO={
+"308":[".308 Ammo",.012,1,3],"357":[".357 Magnum Ammo",.011,1,3],"45":[".45 ACP Ammo",.011,1,3],
+"50bmg":[".50 BMG",.024,2,3],"50pst":[".50 PST Ammo",.288,10,1.5],"12g":["12-Gauge Buckshot",.02,2,.25],
+"127":["12.7x55mm Subsonic Ammo",.012,2,1.5],"20mm":["20x105mm Anti-Tank",.44,5,12],"40mm":["40mm Grenade",.4,10,1],
+"545":["5.45x39mm Ammo",.012,1,1.5],"545s":["5.45x39mm Ammo Surplus",.019,2,1.5],"545c":["5.45x39mm Cryo Ammo",.022,2,1.5],
+"556":["5.56x45mm Ammo",.011,1,1.5],"57":["5.7x28mm Ammo",.012,1,1.5],"762x39":["7.62x39mm Ammo",.017,2,1.5],
+"762x54":["7.62x54mmR Ammo",.019,2,1.5],"9mm":["9x19mm Ammo",.012,1,1.5],"nitro":["Nitro Express",null,null,1]
+};
+// rounds per stack (wiki Items table, 28 Oct 2026; buckshot 10, 12.7mm 10 and 7.62x39 20 match the game). A stack stays in one container.
+const STK={".308 Ammo":20,".357 Magnum Ammo":12,".45 ACP Ammo":15,".50 BMG":30,".50 PST Ammo":8,"12-Gauge Buckshot":10,"12.7x55mm Subsonic Ammo":10,"20x105mm Anti-Tank":10,"40mm Grenade":6,"5.45x39mm Ammo":30,"5.45x39mm Ammo Surplus":30,"5.45x39mm Cryo Ammo":30,"5.56x45mm Ammo":30,"5.7x28mm Ammo":30,"7.62x39mm Ammo":20,"7.62x54mmR Ammo":20,"9x19mm Ammo":30};
+const AMMO_UNSURE={"nitro":"Nitro Express isn't in the wiki's ammo table, so its size is our guess (2 CU)."};
+// weapons: [name, cat, damage, hs mult, fire modes, rate of fire, DPS, max mag, fits suppressor, accuracy, ammo keys, buy]
+const W=[
+["36M AntiTank","HRF",1800,12,"S",.75,1350,10,1,88.96,["20mm"],192000],["47 TYP","RFL",200,1.5,"SBA",10,2000,30,1,87.81,["762x39"],82000],
+["87 Target","PST",110,1.5,"S",10,1100,15,1,87.81,["9mm"],5000],["AA12","SHG",1200,.25,"SA",5,6000,32,0,75.71,["12g"],82000],
+["AK","RFL",150,1.5,"SA",11.11,1666.67,100,1,87.93,["545","545s","545c"],42000],["APC9 Pro","SMG",110,1.5,"SBA",14.29,1571.43,20,1,87.89,["9mm"],14000],
+["AT-43 MASS","HRF",20000,1.5,"S",1.33,26666.67,4,0,88.97,["50pst"],92000],["C96","PST",110,1.5,"S",10,1100,10,0,87.81,["9mm"],4000],
+["CLAW","SHG",1320,.25,"SA",5,6600,25,0,75.71,["12g"],108000],["G-L 19","PST",110,1.5,"S",10,1100,50,1,87.81,["9mm"],3000],
+["G36","RFL",150,1.5,"SBA",12.5,1875,40,1,88.36,["556"],52000],["GM6","HRF",1100,3,"S",.75,825,5,0,88.97,["50bmg"],124000],
+["Grenade Launcher","GRL",11000,1,"S",1.5,16499.99,6,0,89.77,["40mm"],266000],["Kriss Vector 45","SMG",200,3,"SBA",14.29,2857.14,30,1,87.81,["45"],42000],
+["LMG-P","LMG",525,1.5,"A",12.5,6562.5,100,1,87.82,["762x54"],134000],["M16","RFL",150,1.5,"SBA",13.33,2000,30,1,87.81,["556"],32000],
+["M4A1","RFL",150,1.5,"SBA",15.15,2272.73,60,1,88.2,["556"],56000],["M60","LMG",290,3,"A",11.11,3222.22,100,1,87.82,["308"],128000],
+["M79 Sawed-off","GRL",11000,1,"S",2,22000,1,0,89.77,["40mm"],175000],["Mateo Model J","PST",600,3,"S",4,2400,6,1,87.81,["357"],26000],
+["MG34","LMG",290,3,"A",18.18,5272.73,75,1,87.81,["308"],104000],["NTW-20","HRF",1100,3,"S",.75,825,5,0,88.96,["50bmg"],148000],
+["P90","SMG",110,1.5,"SBA",14.29,1571.43,35,1,87.81,["57"],36000],["Painless","HMG",472,1,"A",40,18900,500,0,87.81,["nitro"],178000],
+["PM-9","SMG",110,1.5,"SBA",14.29,1571.43,50,1,87.81,["9mm"],16000],["PnP-2K","SMG",121,1.5,"SBA",10,1210,13,0,87.81,["9mm"],38000],
+["PP-19 Vityaz","SMG",110,1.5,"SBA",13.33,1466.67,45,1,87.81,["9mm"],24000],["PPSH-41","SMG",110,1.5,"SBA",28.57,3142.86,35,1,87.81,["9mm"],18000],
+["R11 RSASS","RFL",300,3,"S",11.63,3488.37,20,1,88.97,["308"],110000],["R8","PST",540,3,"S",10,5400,8,1,87.81,["357"],16000],
+["RPD","LMG",290,1.5,"A",12.5,3625,75,1,87.81,["762x39"],114000],["RPK","RFL",175,1.5,"SBA",14.29,2500,100,1,88.12,["762x39"],75000],
+["S12","SHG",3000,.25,"S",.91,2727.27,9,0,75.71,["12g"],28000],["SA58","RFL",175,3,"SBA",11.76,2058.82,50,1,87.82,["308"],72000],
+["SAW","LMG",250,1.5,"SBA",11.76,2941.18,300,1,87.83,["556"],142000],["SCAR","HRF",300,3,"SBA",10,3000,50,1,87.84,["50bmg"],92000],
+["SOG","PST",200,3,"S",10,2000,8,1,87.81,["45"],11000],["Spectre M4","SMG",200,3,"SBA",14.29,2857.14,50,1,87.81,["45"],38000],
+["Surplus Rifle","RFL",140,1.5,"SA",7.41,1037.04,10,0,87.81,["545","545s","545c"],0],["Surplus Shotgun","SHG",2700,.25,"S",1,2700,5,0,75.71,["12g"],0],
+["SVD","RFL",300,1.5,"S",10,3000,10,1,88.96,["762x54"],88000],["TKB-0146","RFL",150,1.5,"SBA",10,1500,30,1,87.81,["545","545s","545c"],38000],
+["USAS-12","SHG",1200,.25,"SA",5,6000,20,0,75.72,["12g"],74000],["USP","PST",200,3,"S",10,2000,12,1,87.81,["45"],12000],
+["VEPR-12","SHG",1200,.25,"SA",5,6000,25,0,75.71,["12g"],92000],["VH-Ambi 2","RFL",150,1.5,"SBA",14.33,2150.01,30,1,87.81,["556"],92000],
+["VIK-32L","RFL",150,1.5,"SBA",14.33,2150.01,30,1,87.81,["556"],72000],["Viper","PST",110,1.5,"S",10,1100,17,1,87.81,["9mm"],6000],
+["VKS Vykhlop","RFL",600,1.5,"S",10,6000,5,0,87.82,["127"],92000],["WLT MPL","SMG",110,1.5,"SBA",9.09,1000,30,1,87.81,["9mm"],24000],
+["XM25","GRL",11000,1,"S",3,33000.03,4,0,89.77,["40mm"],324000]
+].map(r=>({n:r[0],c:r[1],dmg:r[2],hs:r[3],fm:r[4],rof:r[5],dps:r[6],mag:r[7],sup:r[8],acc:r[9],ammo:r[10],buy:r[11]}));
+const WBY=Object.fromEntries(W.map(w=>[w.n,w]));
+const CAT={RFL:["Rifles","rifle"],SMG:["Submachine guns","SMG"],LMG:["Light machine guns","LMG"],HMG:["Heavy machine guns","heavy MG"],HRF:["Heavy rifles","heavy rifle"],SHG:["Shotguns","shotgun"],PST:["Pistols","pistol"],GRL:["Grenade launchers","grenade launcher"]};
+// Endgame spoilers: hidden behind [classified] in spoiler-free mode. The railgun isn't a carry weapon yet; it's listed so it stays hidden if it ever shows up here.
+const CLASSIFIED=new Set(["AT-43 MASS","Rail Gun Turret Weapon"]);
+// weapon parts from the wiki's WeaponParts and WeaponPartCompatibility tables (datamined).
+// p: [name, slot, mag capacity, suppressed, accuracy change, rate-of-fire change, unlock weapon level, note]
+// w: weapon -> parts; [part, ...needs one of these parts] when a part needs another part fitted first. b: stock magazine size.
+const PD={"p":[["AA-12 Handguard","HGD",0,0,0,0,5,""],["AA12 Shotgun Magazine A","MAG",8,0,0,0,1,""],["AA12 Shotgun Magazine B","MAG",32,0,0,0,3,""],["ACG 2x","SCP",0,0,0.531,0,0,""],["Aimp H2 Optic","OPT",0,0,0,0,0,""],["Aimp Micro Optic","OPT",0,0,0,0,0,""],["AK Barrel B","BRL",0,0,0.025,0,17,""],["AK Barrel C","BRL",0,0,0.055,0,23,""],["APC9 Pro Barrel A","BRL",0,0,0,0,1,""],["APC9 Pro Barrel B","BRL",0,0,0.088,0,3,""],["APC9 Pro Stock A","STK",0,0,0.037,0,1,""],["C96 Pistol Receiver A","UPP",0,0,0,0,1,""],["C96 Pistol Receiver B","UPP",0,0,0.03,0,3,""],["E-TECH XP Optic","OPT",0,0,0,0,0,""],["ET EFX Optic","OPT",0,0,0,0,0,""],["ET HWS EXP Optic","OPT",0,0,0,0,0,""],["ET XP2 Optic","OPT",0,0,0,0,0,""],["Foregrip A","FGR",0,0,0.061,0,0,""],["Foregrip B","FGR",0,0,0.061,0,0,""],["Foregrip C","FGR",0,0,0.059,0,0,""],["Foregrip D","FGR",0,0,0.059,0,0,""],["Foregrip E","FGR",0,0,0.06,0,0,""],["Foregrip F","FGR",0,0,0.059,0,0,""],["Foregrip G","FGR",0,0,0.061,0,0,""],["Foregrip H","FGR",0,0,0.061,0,0,""],["Foregrip I","FGR",0,0,0.055,0,0,""],["Foregrip J","FGR",0,0,0.061,0,0,""],["Foregrip K","FGR",0,0,0.063,0,0,""],["Foregrip L","FGR",0,0,0.051,0,0,""],["Foregrip M","FGR",0,0,0.052,0,0,""],["Foregrip N","FGR",0,0,0.057,0,0,""],["Foregrip O","FGR",0,0,0.051,0,0,""],["Foregrip P","FGR",0,0,0.061,0,0,""],["Foregrip Q","FGR",0,0,0.061,0,0,""],["G-L 19 Magazine A","MAG",15,0,0,0,1,""],["G-L 19 Magazine B","MAG",50,0,0,0,5,""],["G-L 19 Upper Assmbly A","UPP",0,0,0,0,1,""],["G-L 19 Upper Assmbly B","UPP",0,0,0.025,0,3,"Integrated optic sight"],["G-L 19 Upper Assmbly C","UPP",0,0,0.057,0,7,"Integrated optic sight"],["G36 Barrel A","BRL",0,0,0,0,1,""],["G36 Barrel B","BRL",0,0,0.026,0,7,""],["G36 Barrel C","BRL",0,0,0.06,0,13,""],["G36 Handguard A","HGD",0,0,0,0,1,""],["G36 Handguard B","HGD",0,0,0.03,0,3,""],["G36 Handguard C","HGD",0,0,0.063,0,9,""],["G36 Handguard D","HGD",0,0,0.092,0,15,""],["G36 Handguard E","HGD",0,0,0.104,0,19,""],["G36 Magazine A","MAG",30,0,0,0,1,""],["G36 Magazine B","MAG",40,0,0,0,23,""],["G36 Receiver A","UPP",0,0,0,0,1,""],["G36 Receiver B","UPP",0,0,0.028,0,5,""],["G36 Receiver C","UPP",0,0,0.055,0,17,""],["G36 Receiver D","UPP",0,0,0.077,0,21,""],["G36 Stock A","STK",0,0,0,0,1,""],["G36 Stock B","STK",0,0,0.058,0,11,""],["H-sun Optic","OPT",0,0,0,0,0,""],["HK CAWS Magazine B","MAG",25,0,0,0,7,""],["Kala Gas Tube B","GAS",0,0,0,0,0,""],["Kala Gas Tube C","GAS",0,0,0,0,0,""],["Kala Gas Tube D","GAS",0,0,0,0,0,""],["Kala Gas Tube E","GAS",0,0,0,0,0,""],["Kala Grip A","GRP",0,0,0,0,1,""],["Kala Grip A-1","GRP",0,0,0.027,0,1,""],["Kala Grip A-2","GRP",0,0,0.028,0,1,""],["Kala Grip B","GRP",0,0,0.029,0,3,""],["Kala Grip C","GRP",0,0,0.061,0,7,""],["Kala Grip D","GRP",0,0,0.093,0,13,""],["Kala Handguard B","HGD",0,0,0.027,0,9,""],["Kala Handguard B-1","HGD",0,0,0.058,0,9,""],["Kala Handguard B-2","HGD",0,0,0.061,0,9,""],["Kala Handguard C","HGD",0,0,0.092,0,33,""],["Kala Handguard D","HGD",0,0,0.115,0,37,""],["Kala Handguard E","HGD",0,0,0.138,0,39,""],["Kala Handguard F","HGD",0,0,0.185,0,43,""],["Kala Handguard G","HGD",0,0,0.203,0,45,""],["Kala Handguard H","HGD",0,0,0.217,0,0,""],["Kala Handguard I","HGD",0,0,0.193,0,0,""],["Kala Handguard J","HGD",0,0,0.219,0,0,""],["Kala Magazine A","MAG",30,0,0,0,1,""],["Kala Magazine B","MAG",40,0,0,0,5,""],["Kala Magazine C","MAG",60,0,0,0,15,""],["Kala Magazine D","MAG",30,0,0,0,21,""],["Kala Magazine E","MAG",40,0,0,0,31,""],["Kala Magazine E-1","MAG",40,0,0,0,31,""],["Kala Magazine F","MAG",30,0,0,0,35,""],["Kala Magazine G","MAG",10,0,0,0,41,""],["Kala Magazine H","MAG",95,0,0,0,47,""],["Kala Magazine I","MAG",100,0,0,0,0,""],["Kala Stock A","STK",0,0,0,0,1,""],["Kala Stock B","STK",0,0,0.03,0,11,""],["Kala Stock B-1","STK",0,0,0.026,0,11,""],["Kala Stock B-2","STK",0,0,0.029,0,11,""],["Kala Stock C","STK",0,0,0.063,0,19,""],["Kala Stock C-1","STK",0,0,0.05,0,19,""],["Kala Stock C-2","STK",0,0,0.061,0,19,""],["Kala Stock D","STK",0,0,0.081,0,25,""],["Kala Stock E","STK",0,0,0.121,0,29,""],["Kala Upper Assembly A","UPP",0,0,0,0,1,""],["Kala Upper Assembly B","UPP",0,0,0,0,1,""],["Kriss Vector Handguard A","HGD",0,0,0,0,0,""],["Kriss Vector Handguard B","HGD",0,0,0,0,5,""],["M16 Barrel A","BRL",0,0,0,0,1,""],["M16 Gas Tube A","GAS",0,0,0,0,1,""],["M16 Gas Tube B","GAS",0,0,0,0,5,""],["M16 Handguard A","HGD",0,0,0,0,1,""],["M16 Handguard B","HGD",0,0,0.03,0,7,""],["M16 Handguard C","HGD",0,0,0.058,0,13,""],["M16 Handguard D","HGD",0,0,0.078,0,21,""],["M16 Handguard E","HGD",0,0,0.122,0,23,""],["M16 Handguard F","HGD",0,0,0.135,0,25,""],["M16 Handguard G","HGD",0,0,0.158,0,27,""],["M16 Handguard H","HGD",0,0,0.2,0,29,""],["M16 Magazine A","MAG",20,0,0,0,1,""],["M16 Magazine B","MAG",30,0,0,0,31,""],["M16 Stock A","STK",0,0,0,0,1,""],["M16 Stock B","STK",0,0,0.029,0,11,""],["M16 Stock C","STK",0,0,0.063,0,17,""],["M16 Upper Assmbly A","UPP",0,0,0,0,1,""],["M16 Upper Assmbly B","UPP",0,0,0.026,0,15,""],["M16 Upper Assmbly C","UPP",0,0,0.054,0,19,"Integrated scope"],["M4A1 Barrel","BRL",0,0,0.102,0,0,""],["M4A1 Barrel A","BRL",0,0,0,0,1,""],["M4A1 Barrel B","BRL",0,0,0.058,0,7,""],["M4A1 Barrel C","BRL",0,0,0.115,0,19,""],["M4A1 Charging Handle A","CHG",0,0,0,0,1,""],["M4A1 Charging Handle B","CHG",0,0,0.027,0,3,""],["M4A1 Charging Handle C","CHG",0,0,0.053,0,9,""],["M4A1 Gas Tube","GAS",0,0,0,0,0,""],["M4A1 Gas Tube A","GAS",0,0,0,0,1,""],["M4A1 Gas Tube B","GAS",0,0,0,0,5,""],["M4A1 Gas Tube C","GAS",0,0,0,0,13,""],["M4A1 Handguard Upgrade B","HGD",0,0,0.151,0,0,""],["M4A1 Handguard Upgrade C","HGD",0,0,0.133,0,0,""],["M4A1 Handguard Upgrade D","HGD",0,0,0.154,0,0,""],["M4A1 Handguard Upgrade E","HGD",0,0,0.138,0,0,""],["M4A1 Handguard Upgrade F","HGD",0,0,0.149,0,0,""],["M4A1 Handguard Upgrade G","HGD",0,0,0.128,0,0,""],["M4A1 Handguard Upgrade H","HGD",0,0,0.141,0,0,""],["M4A1 Handguard Upgrade I","HGD",0,0,0.128,0,0,""],["M4A1 Handguard Upgrade J","HGD",0,0,0.144,0,0,""],["M4A1 Handguard Upgrade K","HGD",0,0,0.145,0,0,""],["M4A1 Handguard Upgrade L","HGD",0,0,0.149,0,0,""],["M4A1 Handguard Upgrade M","HGD",0,0,0.125,0,0,""],["M4A1 Handguard Upgrade N","HGD",0,0,0.125,0,0,""],["M4A1 Handguard Upgrade O","HGD",0,0,0.136,0,0,""],["M4A1 Magazine","MAG",0,0,0,0,0,""],["M4A1 Magazine A","MAG",30,0,0,0,1,""],["M4A1 Magazine B","MAG",60,0,0,0,31,""],["M4A1 Pistol Grip A","GRP",0,0,0.05,0,0,""],["M4A1 Pistol Grip B","GRP",0,0,0.05,0,0,""],["M4A1 Pistol Grip C","GRP",0,0,0.061,0,0,""],["M4A1 Receiver A","UPP",0,0,0,0,1,""],["M4A1 Receiver B","UPP",0,0,0.028,0,27,""],["M4A1 Receiver C","UPP",0,0,0.053,0,29,""],["M4A1 Stock A","STK",0,0,0.05,0,0,""],["M4A1 Stock B","STK",0,0,0.085,0,0,""],["M4A1 Stock C","STK",0,0,0.079,0,0,""],["M4A1 Stock D","STK",0,0,0.077,0,0,""],["M4A1 Stock E","STK",0,0,0.089,0,0,""],["M4A1 Stock F","STK",0,0,0.094,0,0,""],["M60 Handguard A","HGD",0,0,0,0,0,""],["M60 Handguard B","HGD",0,0,0,0,5,""],["M79 Barrel A","BRL",0,0,0,0,1,""],["M79 Barrel B","BRL",0,0,0.028,0,3,""],["M79 Front Sight A","FS",0,0,0,0,1,""],["M79 Front Sight B","FS",0,0,0.029,0,5,""],["M79 Grip A","GRP",0,0,0,0,1,""],["M79 Grip B","GRP",0,0,0.027,0,11,""],["M79 Handguard A","HGD",0,0,0,0,1,""],["M79 Handguard B","HGD",0,0,0.027,0,7,""],["M79 Magazine A","MAG",1,0,0,0,1,""],["M79 Magazine B","MAG",1,0,0,0,9,""],["M79 Rear Sight A","RS",0,0,0,0,1,""],["M79 Rear Sight B","RS",0,0,0.052,0.1,13,""],["M79 Receiver A","UPP",0,0,0,0,1,""],["M79 Receiver B","UPP",0,0,0.03,0,17,""],["M79 Sight A","RS",0,0,0,0,1,""],["M79 Sight B","RS",0,0,0.052,0.1,13,""],["M79 Trigger A","TRG",0,0,0,0,1,""],["M79 Trigger B","TRG",0,0,0,0.05,15,""],["Muzzle Device A","MZL",0,0,0.026,0,0,""],["Muzzle Device B","MZL",0,0,0.028,0,0,""],["Muzzle Device C","MZL",0,0,0.027,0,0,""],["Muzzle Device D","MZL",0,0,0.028,0,0,""],["Muzzle Device E","MZL",0,0,0.029,0,0,""],["Muzzle Device F","MZL",0,0,0.025,0,0,""],["Muzzle Device G","MZL",0,0,0.029,0,0,""],["Muzzle Device H","MZL",0,0,0.031,0,0,""],["Muzzle Device I","MZL",0,0,0.03,0,0,""],["Muzzle Device J","MZL",0,0,0.029,0,0,""],["Muzzle Device K","MZL",0,0,0.031,0,0,""],["Muzzle Device L","MZL",0,0,0.029,0,0,""],["Muzzle Device M","MZL",0,0,0.029,0,0,""],["Muzzle Device N","MZL",0,0,0.029,0,0,""],["Muzzle Device O","MZL",0,0,0.029,0,0,""],["Muzzle Device P","MZL",0,0,0.031,0,0,""],["Muzzle Device Q","MZL",0,0,0.031,0,0,""],["NSN Grip A","GRP",0,0,0,0,1,""],["NSN Grip B","GRP",0,0,0.03,0,15,""],["NSN Grip C","GRP",0,0,0.058,0,23,""],["NSN Grip D","GRP",0,0,0,0,1,""],["NSN Grip E","GRP",0,0,0,0,1,""],["NSN Handguard A","HGD",0,0,0,0,1,""],["NSN Handguard B","HGD",0,0,0.028,0,11,""],["NSN Handguard C","HGD",0,0,0.053,0,21,""],["NSN Handguard D","HGD",0,0,0,0,1,""],["NSN Stock A","STK",0,0,0,0,1,""],["NSN Stock B","STK",0,0,0.029,0,17,""],["NSN Stock C","STK",0,0,0.061,0,25,""],["NSN Stock D","STK",0,0,0,0,1,""],["P Arms 3P Optic","OPT",0,0,0,0,0,""],["PM-9 Barrel A","BRL",0,0,0,0,1,""],["PM-9 Barrel B","BRL",0,0,0.09,0,5,""],["PM-9 Barrel C","BRL",0,0,0.15,0,7,""],["PM-9 Magazine A","MAG",20,0,0,0,1,""],["PM-9 Magazine B","MAG",50,0,0,0,9,""],["PM-9 Upper Assembly A","UPP",0,0,0,0,0,""],["PM-9 Upper Assembly B","UPP",0,0,0,0,11,""],["PP-19 Vityaz Barrel A","BRL",0,0,0,0,1,""],["PP-19 Vityaz Barrel B","BRL",0,0,0.102,0,7,""],["PP-19 Vityaz Grip A","GRP",0,0,0,0,1,""],["PP-19 Vityaz Grip B","GRP",0,0,0.027,0,9,""],["PP-19 Vityaz Handguard A","HGD",0,0,0,0,1,""],["PP-19 Vityaz Handguard B","HGD",0,0,0.029,0,5,""],["PP-19 Vityaz Magazine A","MAG",30,0,0,0,1,""],["PP-19 Vityaz Magazine B","MAG",45,0,0,0,17,""],["PP-19 Vityaz Stock A","STK",0,0,0,0,1,""],["PP-19 Vityaz Stock B","STK",0,0,0.067,0,11,""],["PP-19 Vityaz Trigger A","TRG",0,0,0,0,1,""],["PP-19 Vityaz Trigger B","TRG",0,0,0,0.05,13,""],["PP-19 Vityaz Upper Assembly A","UPP",0,0,0,0,1,""],["PP-19 Vityaz Upper Assembly B","UPP",0,0,0,0.05,15,""],["Rail Mounted Flashlight A","RAIL",0,0,0.006,0,0,""],["Rail Mounted Flashlight B","RAIL",0,0,0.005,0,0,""],["Rail Mounted Flashlight C","RAIL",0,0,0.006,0,0,""],["Rail Mounted Laser Sight A","RAIL",0,0,0.027,0,0,""],["Rail Mounted Laser Sight B","RAIL",0,0,0.03,0,0,""],["Rail Mounted Laser Sight C","RAIL",0,0,0.026,0,0,""],["RPD Barrel A","BRL",0,0,0,0,1,""],["RPD Barrel B","BRL",0,0,0.087,0,3,""],["RPD Barrel C","STK",0,0,0,0,1,""],["RPD Handguard A","HGD",0,0,0,0,0,""],["RPD Handguard B","HGD",0,0,0,0,5,""],["S12 Shotgun Barrel A","BRL",0,0,0,0,1,""],["S12 Shotgun Barrel B","BRL",0,0,0.026,0,3,""],["S12 Shotgun Barrel C","BRL",0,0,0.062,0,5,""],["S12 Shotgun Magazine A","MAG",6,0,0,0,1,""],["S12 Shotgun Magazine B","MAG",4,0,0,0,7,""],["S12 Shotgun Magazine C","MAG",9,0,0,0,9,""],["SA58 Barrel A","BRL",0,0,0,0,1,""],["SA58 Barrel B","BRL",0,0,0.057,0,3,""],["SA58 Magazine A","MAG",20,0,0,0,1,""],["SA58 Magazine B","MAG",50,0,0,0,5,""],["SAW Barrel A","BRL",0,0,0,0,1,""],["SAW Barrel B","BRL",0,0,0.025,0,3,""],["SAW Gas Tube A","GAS",0,0,0,0,1,""],["SAW Gas Tube B","GAS",0,0,0,0,5,""],["SAW Grip A","GRP",0,0,0,0,1,""],["SAW Grip B","GRP",0,0,0.027,0,13,""],["SAW Handguard A","HGD",0,0,0,0,1,""],["SAW Handguard B","HGD",0,0,0.028,0,7,""],["SAW Handguard C","HGD",0,0,0.055,0,9,""],["SAW Handguard D","HGD",0,0,0,0,6,""],["SAW Magazine A","MAG",200,0,0,0,1,""],["SAW Magazine B","MAG",300,0,0,0,11,""],["SAW Stock A","STK",0,0,0,0,1,""],["SAW Stock B","STK",0,0,0.065,0,15,""],["SCAR Barrel A","BRL",0,0,0,0,0,""],["SCAR Barrel B","BRL",0,0,0.028,0,1,""],["SCAR Barrel C","BRL",0,0,0.051,0,3,""],["SCAR Barrel D","BRL",0,1,0.075,0,9,""],["SCAR Handgaurd E","HGD",0,0,0.112,0,13,""],["SCAR Handguard A","HGD",0,0,0,0,1,""],["SCAR Handguard B","HGD",0,0,0.031,0,0,""],["SCAR Handguard C","HGD",0,0,0.051,0,5,""],["SCAR Handguard D","HGD",0,0,0.075,0,11,""],["SCAR Handguard F","HGD",0,0,0.15,0,15,""],["SCAR Magazine A","MAG",8,0,0,0,1,""],["SCAR Magazine B","MAG",20,0,0,0,17,""],["SCAR Magazine C","MAG",50,0,0,0,19,""],["SCAR Magazine D","MAG",8,0,0,0,7,""],["Sfox QueenKiller Optic","OPT",0,0,0,0,0,""],["SIGS Cheers 2x","SCP",0,0,0.473,0,0,""],["SOG Receiver A","UPP",0,0,0,0,1,""],["SOG Receiver B","UPP",0,0,0.03,0,3,"Integrated optic sight"],["Spectre M4 Handguard","HGD",0,0,0,0,5,""],["Spook Optic","OPT",0,0,0,0,0,""],["Stein R Optic","OPT",0,0,0,0,0,""],["Suppressed Muzzle Device A","MZL",0,1,0.026,0,0,""],["Suppressed Muzzle Device B","MZL",0,1,0.026,0,0,""],["Suppressed Muzzle Device C","MZL",0,1,0.03,0,0,""],["Suppressed Muzzle Device D","MZL",0,1,0.029,0,0,""],["Suppressed Muzzle Device E","MZL",0,1,0.03,0,0,""],["Suppressed Muzzle Device F","MZL",0,1,0.031,0,0,""],["SVD Barrel A","BRL",0,0,0,0,1,""],["SVD Barrel B","BRL",0,0,0.027,0,7,""],["SVD Barrel C","BRL",0,0,0.062,0,11,""],["SVD Barrel D","BRL",0,1,0.078,0,13,""],["SVD Stock A","STK",0,0,0,0,1,""],["SVD Stock B","STK",0,0,0.029,0,3,""],["SVD Upper Assmbly A","UPP",0,0,0,0,1,""],["SVD Upper Assmbly B","UPP",0,0,0.026,0,9,"Integrated scope"],["SVD Upper Assmbly C","UPP",0,0,0.054,0,15,""],["SVD Upper Assmbly D","UPP",0,0,0.088,0,17,""],["SVD Upper Assmbly E","UPP",0,0,0.117,0,19,""],["SVD Upper Assmbly F","UPP",0,0,0.146,0,21,""],["Target Pistol Magazine A","MAG",12,0,0,0,1,""],["Target Pistol Magazine B","MAG",15,0,0,0,3,""],["TKB-0146 Handguard A","HGD",0,0,0,0,0,""],["TKB-0146 Handguard B","HGD",0,0,0,0,5,""],["Tri M Optic","OPT",0,0,0,0,0,""],["TrueAimer 4x","SCP",0,0,0.459,0,0,""],["USAS-12 Shotgun Barrel A","BRL",0,0,0,0,1,""],["USAS-12 Shotgun Barrel B","BRL",0,0,0.027,0,3,""],["USAS-12 Shotgun Barrel C","BRL",0,0,0.054,0,5,""],["USAS-12 Shotgun Handguard B","HGD",0,0,0,0,6,""],["USAS-12 Shotgun Magazine A","MAG",12,0,0,0,1,""],["USAS-12 Shotgun Magazine B","MAG",20,0,0,0,7,""],["USAS-12 Shotgun Magazine C","MAG",8,0,0,0,9,""],["Vepr-12 Shotgun Handguard A","HGD",0,0,0,0,1,""],["Vepr-12 Shotgun Handguard B","HGD",0,0,0.025,0,3,""],["Vepr-12 Shotgun Handguard C","HGD",0,0,0.053,0,5,""],["Vepr-12 Shotgun Magazine A","MAG",10,0,0,0,1,""],["Vepr-12 Shotgun Magazine B","MAG",25,0,0,0,7,""],["VHS2 Upper Assembly B","UPP",0,0,0.027,0,3,"Integrated scope"],["VKS Front Sight","FS",0,0,0,0,0,""],["VKS Handguard A","HGD",0,0,0,0,0,""],["VKS Handguard B","HGD",0,0,0,0,3,""],["Vtex Optic","OPT",0,0,0,0,0,""],["Vtex Raz Gen 2 Optic","OPT",0,0,0,0,0,""],["Vtex Spit 3x","SCP",0,0,0.486,0,0,""],["Vtex Strike Optic","OPT",0,0,0,0,0,""],["Vtex V Optic","OPT",0,0,0,0,0,""],["Walther MPL Handguard","HGD",0,0,0,0,3,""],["Zeni-B P6 Optic","OPT",0,0,0,0,0,""]],"w":{"AA12":[0,1,2,[4,0],[5,0],[13,0],[14,0],[15,0],[16,0],[17,0],[18,0],[19,0],[20,0],[21,0],[22,0],[23,0],[24,0],[25,0],[26,0],[27,0],[28,0],[29,0],[30,0],[31,0],[32,0],[33,0],[55,0],181,[210,0],[232,0],[233,0],[234,0],[235,0],[236,0],[237,0],[281,0],[286,0],[287,0],[310,0],[328,0],[329,0],[331,0],[332,0],[334,0]],"87 Target":[3,4,5,13,14,15,16,55,180,210,232,233,234,235,236,237,281,282,286,287,288,306,307,310,311,328,329,330,331,332,334],"AK":[[3,98],[4,98],[5,98],6,7,[13,98],[14,98],[15,98],[16,98],[17,76,77,70,73,74],[18,76,77,70,73,74],[19,76,77,70,73,74],[20,76,77,70,73,74],[21,76,77,70,73,74],[22,76,77,70,73,74],[23,76,77,70,73,74],[24,76,77,70,73,74],[25,76,77,70,73,74],[26,76,77,70,73,74],[27,76,77,70,73,74],[28,76,77,70,73,74],[29,76,77,70,73,74],[30,76,77,70,73,74],[31,76,77,70,73,74],[32,76,77,70,73,74],[33,76,77,70,73,74],[55,98],57,58,60,61,62,63,64,65,66,67,68,69,70,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,[182,6,7],[183,6,7],[184,6,7],[185,6,7],[186,6,7],[187,6,7],[188,6,7],[189,6,7],[190,6,7],[210,98],[232,70,73,74],[233,70,73,74],[234,70,73,74],[235,70,73,74],[236,70,73,74],[237,70,73,74],[281,98],[282,98],[286,98],[287,98],[289,6,7],[290,6,7],[291,6,7],[310,98],[311,98],[328,98],[329,98],[330,98],[331,98],[332,98],[334,98]],"APC9 Pro":[3,4,5,8,9,10,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,55,[180,8,9],210,232,233,234,235,236,237,281,282,286,287,[288,8,9],310,311,328,329,330,331,332,334],"AT-43 MASS":[3,4,5,13,14,15,16,55,210,281,282,286,287,310,311,328,329,330,331,332,334],"G36":[[3,52],[4,51,52],[5,51,52],[13,51,52],[14,51,52],[15,51,52],[16,51,52],[17,45,46],[18,45,46],[19,45,46],[20,45,46],[21,45,46],[22,45,46],[23,45,46],[24,45,46],[25,45,46],[26,45,46],[27,45,46],[28,45,46],[29,45,46],[30,45,46],[31,45,46],[32,45,46],[33,45,46],39,40,41,42,43,44,45,46,47,48,49,50,51,52,53,54,[55,51,52],[182,39,40,41],[183,39,40,41],[184,39,40,41],[185,39,40,41],[186,39,40,41],[187,39,40,41],[188,39,40,41],[189,39,40,41],[190,39,40,41],[210,51,52],[232,45,46],[233,45,46],[234,45,46],[235,45,46],[236,45,46],[237,45,46],[281,51,52],[282,52],[286,51,52],[287,51,52],[289,39,40,41],[290,39,40,41],[291,39,40,41],[310,51,52],[311,52],[328,51,52],[329,51,52],[330,52],[331,51,52],[332,51,52],[334,51,52]],"GM6":[3,4,5,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,55,195,196,210,232,233,234,235,236,237,281,282,286,287,310,311,328,329,330,331,332,334],"Kriss Vector 45":[3,4,5,13,14,15,16,55,99,100,180,210,[232,100],[233,100],[234,100],[235,100],[236,100],[237,100],281,282,286,287,288,310,311,328,329,330,331,332,334],"LMG-P":[3,4,5,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,55,191,192,193,194,210,232,233,234,235,236,237,281,282,286,287,292,293,310,311,328,329,330,331,332,334],"M16":[[3,118],[4,118],[5,118],[13,118],[14,118],[15,118],[16,118],[17,106,108],[18,106,108],[19,106,108],[20,106,108],[21,106,108],[22,106,108],[23,106,108],[24,106,108],[25,106,108],[26,106,108],[27,106,108],[28,106,108],[29,106,108],[30,106,108],[31,106,108],[32,106,108],[33,106,108],[55,118],101,102,103,104,105,106,107,108,109,110,111,112,113,114,115,116,117,118,119,[182,101],[183,101],[184,101],[185,101],[186,101],[187,101],[188,101],[189,101],[190,101],[210,118],[232,106,108],[233,106,108],[234,106,108],[235,106,108],[236,106,108],[237,106,108],[281,118],[282,118],[286,118],[287,118],[289,101],[290,101],[291,101],[310,118],[311,118],[328,118],[329,118],[330,118],[331,118],[332,118],[334,118]],"M4A1":[[3,151,152,153],[4,151,152,153],[5,151,152,153],[13,151,152,153],[14,151,152,153],[15,151,152,153],[16,151,152,153],[17,202,203,205],[18,202,203,205],[19,202,203,205],[20,202,203,205],[21,202,203,205],[22,202,203,205],[23,202,203,205],[24,202,203,205],[25,202,203,205],[26,202,203,205],[27,202,203,205],[28,202,203,205],[29,202,203,205],[30,202,203,205],[31,202,203,205],[32,202,203,205],[33,202,203,205],[55,151,152,153],120,121,122,123,124,125,126,127,128,129,130,131,132,133,134,135,136,137,138,139,140,141,142,143,144,145,146,147,148,149,150,151,152,153,154,155,156,157,158,159,[182,121,122,123],[183,121,122,123],[184,121,122,123],[185,121,122,123],[186,121,122,123],[187,121,122,123],[188,121,122,123],[189,121,122,123],[190,121,122,123],197,198,199,200,201,202,203,204,205,206,207,208,209,[210,151,152,153],[232,202,203,205],[233,202,203,205],[234,202,203,205],[235,202,203,205],[236,202,203,205],[237,202,203,205],[281,151,152,153],[282,151,152,153],[286,151,152,153],[287,151,152,153],[289,121,122,123],[290,121,122,123],[291,121,122,123],[310,151,152,153],[311,151,152,153],[328,151,152,153],[329,151,152,153],[330,151,152,153],[331,151,152,153],[332,151,152,153],[334,151,152,153]],"P90":[3,4,5,13,14,15,16,55,180,210,232,233,234,235,236,237,281,282,286,287,288,310,311,328,329,330,331,332,334],"PnP-2K":[3,4,5,13,14,15,16,55,210,281,282,286,287,310,311,328,329,330,331,332,334],"PP-19 Vityaz":[[3,231],[4,231],[5,231],[13,231],[14,231],[15,231],[16,231],[17,223],[18,223],[19,223],[20,223],[21,223],[22,223],[23,223],[24,223],[25,223],[26,223],[27,223],[28,223],[29,223],[30,223],[31,223],[32,223],[33,223],[55,231],[180,218,219],[210,231],218,219,220,221,222,223,224,225,226,227,228,229,230,231,[232,223],[233,223],[234,223],[235,223],[236,223],[237,223],[281,231],[282,231],[286,231],[287,231],[288,218,219],[310,231],[311,231],[328,231],[329,231],[330,231],[331,231],[332,231],[334,231]],"PPSH-41":[3,4,5,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,55,180,210,232,233,234,235,236,237,281,282,286,287,288,310,311,328,329,330,331,332,334],"R11 RSASS":[3,4,5,13,14,15,16,[17,202,203,205],[18,202,203,205],[19,202,203,205],[20,202,203,205],[21,202,203,205],[22,202,203,205],[23,202,203,205],[24,202,203,205],[25,202,203,205],[26,202,203,205],[27,202,203,205],[28,202,203,205],[29,202,203,205],[30,202,203,205],[31,202,203,205],[32,202,203,205],[33,202,203,205],55,191,192,193,194,197,198,199,200,201,202,203,204,205,206,207,208,209,210,[232,202,203,205],[233,202,203,205],[234,202,203,205],[235,202,203,205],[236,202,203,205],[237,202,203,205],281,282,286,287,292,293,310,311,328,329,330,331,332,334],"RPK":[[3,98],[4,98],[5,98],7,[13,98],[14,98],[15,98],[16,98],[17,70,71,72,73,74],[18,70,71,72,73,74],[19,70,71,72,73,74],[20,70,71,72,73,74],[21,70,71,72,73,74],[22,70,71,72,73,74],[23,70,71,72,73,74],[24,70,71,72,73,74],[25,70,71,72,73,74],[26,70,71,72,73,74],[27,70,71,72,73,74],[28,70,71,72,73,74],[29,70,71,72,73,74],[30,70,71,72,73,74],[31,70,71,72,73,74],[32,70,71,72,73,74],[33,70,71,72,73,74],[55,98],57,58,59,61,62,63,64,65,66,67,68,69,70,71,72,73,74,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,182,183,184,185,186,187,188,189,190,[210,98],[232,70,71,72,73,74],[233,70,71,72,73,74],[234,70,71,72,73,74],[235,70,71,72,73,74],[236,70,71,72,73,74],[237,70,71,72,73,74],[281,98],[282,98],[286,98],[287,98],289,290,291,[310,98],[311,98],[328,98],[329,98],[330,98],[331,98],[332,98],[334,98]],"SA58":[3,4,5,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,55,[191,249,250],[192,249,250],[193,249,250],[194,249,250],210,232,233,234,235,236,237,249,250,251,252,281,282,286,287,[292,249,250],[293,249,250],310,311,328,329,330,331,332,334],"SAW":[3,4,5,13,14,15,16,55,[182,253,254],[183,253,254],[184,253,254],[185,253,254],[186,253,254],[187,253,254],[188,253,254],[189,253,254],[190,253,254],210,[232,262,261],[233,262,261],[234,262,261],[235,262,261],[236,262,261],[237,262,261],253,254,255,256,257,258,259,260,261,262,263,264,265,266,281,282,286,287,[289,253,254],[290,253,254],[291,253,254],310,311,328,329,330,331,332,334],"SCAR":[3,4,5,13,14,15,16,[17,272,273,274,275,271,276],[18,272,273,274,275,271,276],[19,272,273,274,275,271,276],[20,272,273,274,275,271,276],[21,272,273,274,275,271,276],[22,272,273,274,275,271,276],[23,272,273,274,275,271,276],[24,272,273,274,275,271,276],[25,272,273,274,275,271,276],[26,272,273,274,275,271,276],[27,272,273,274,275,271,276],[28,272,273,274,275,271,276],[29,272,273,274,275,271,276],[30,272,273,274,275,271,276],[31,272,273,274,275,271,276],[32,272,273,274,275,271,276],[33,272,273,274,275,271,276],55,[195,267,268,269],[196,267,268,269],210,[232,272,273,274,275,271,276],[233,272,273,274,275,271,276],[234,272,273,274,275,271,276],[235,272,273,274,275,271,276],[236,272,273,274,275,271,276],[237,272,273,274,275,271,276],267,268,269,270,271,272,273,274,275,276,277,278,279,280,281,282,286,287,310,311,328,329,330,331,332,334],"SVD":[[3,302,303,304,305],[4,302,303,304,305],[5,302,303,304,305],[13,302,303,304,305],[14,302,303,304,305],[15,302,303,304,305],[16,302,303,304,305],[17,304,305],[18,304,305],[19,304,305],[20,304,305],[21,304,305],[22,304,305],[23,304,305],[24,304,305],[25,304,305],[26,304,305],[27,304,305],[28,304,305],[29,304,305],[30,304,305],[31,304,305],[32,304,305],[33,304,305],[55,302,303,304,305],[191,294,295,296],[192,294,295,296],[193,294,295,296],[194,294,295,296],[210,302,303,304,305],[232,304,305],[233,304,305],[234,304,305],[235,304,305],[236,304,305],[237,304,305],[281,302,303,304,305],[282,302,303,304,305],[286,302,303,304,305],[287,302,303,304,305],[292,294,295,296],[293,294,295,296],294,295,296,297,298,299,300,301,302,303,304,305,[310,302,303,304,305],[311,302,303,304,305],[328,302,303,304,305],[329,302,303,304,305],[330,302,303,304,305],[331,302,303,304,305],[332,302,303,304,305],[334,302,303,304,305]],"VEPR-12":[3,4,5,13,14,15,16,[17,319,320,321],[18,319,320,321],[19,319,320,321],[20,319,320,321],[21,319,320,321],[22,319,320,321],[23,319,320,321],[24,319,320,321],[25,319,320,321],[26,319,320,321],[27,319,320,321],[28,319,320,321],[29,319,320,321],[30,319,320,321],[31,319,320,321],[32,319,320,321],[33,319,320,321],55,181,210,[232,319,320,321],[233,319,320,321],[234,319,320,321],[235,319,320,321],[236,319,320,321],[237,319,320,321],281,282,286,287,310,311,319,320,321,322,323,328,329,330,331,332,334],"VH-Ambi 2":[3,4,5,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31,32,33,55,182,183,184,185,186,187,188,189,190,210,281,282,286,287,289,290,291,310,311,324,328,329,330,331,332,334],"VKS Vykhlop":[3,4,5,13,14,15,16,[17,327],[18,327],[19,327],[20,327],[21,327],[22,327],[23,327],[24,327],[25,327],[26,327],[27,327],[28,327],[29,327],[30,327],[31,327],[32,327],[33,327],55,195,196,210,[232,326,327],[233,326,327],[234,326,327],[235,326,327],[236,326,327],[237,326,327],281,282,286,287,310,311,325,326,327,328,329,330,331,332,334],"47 TYP":[4,5,13,14,15,16,55,182,183,184,185,186,187,188,189,190,210,281,286,287,289,290,291,310,328,329,331,332,334],"Grenade Launcher":[4,5,13,14,15,16,55,210,281,286,287,310,328,329,331,332,334],"M60":[[4,161],[5,161],[13,161],[14,161],[15,161],[16,161],[55,161],160,161,182,183,184,185,186,187,188,189,190,[210,161],[232,161],[233,161],[234,161],[235,161],[236,161],[237,161],[281,161],[286,161],[287,161],289,290,291,[310,161],[328,161],[329,161],[331,161],[332,161],[334,161]],"M79 Sawed-off":[[4,174,175],[5,174,175],[13,174,175],[14,174,175],[15,174,175],[16,174,175],[55,174,175],162,163,164,165,166,167,168,169,170,171,172,173,174,175,176,177,178,179,[210,174,175],[281,174,175],[286,174,175],[287,174,175],[310,174,175],[328,174,175],[329,174,175],[331,174,175],[332,174,175],[334,174,175]],"MG34":[4,5,13,14,15,16,55,191,192,193,194,210,281,286,287,292,293,310,328,329,331,332,334],"RPD":[[4,242],[5,242],[13,242],[14,242],[15,242],[16,242],[55,242],[182,238,239],[183,238,239],[184,238,239],[185,238,239],[186,238,239],[187,238,239],[188,238,239],[189,238,239],[190,238,239],[210,242],[232,242],[233,242],[234,242],[235,242],[236,242],[237,242],238,239,240,241,242,[281,242],[286,242],[287,242],[289,238,239],[290,238,239],[291,238,239],[310,242],[328,242],[329,242],[331,242],[332,242],[334,242]],"Spectre M4":[[4,285],[5,285],[13,285],[14,285],[15,285],[16,285],[55,285],180,[210,285],[232,285],[233,285],[234,285],[235,285],[236,285],[237,285],[281,285],285,[286,285],[287,285],288,[310,285],[328,285],[329,285],[331,285],[332,285],[334,285]],"USAS-12":[[4,315],[5,315],[13,315],[14,315],[15,315],[16,315],[55,315],[181,312,313,314],197,198,200,201,[210,315],[232,315],[233,315],[234,315],[235,315],[236,315],[237,315],[281,315],[286,315],[287,315],[310,315],312,313,314,315,316,317,318,[328,315],[329,315],[331,315],[332,315],[334,315]],"C96":[11,12,232,233,234,235,236,237],"TKB-0146":[[17,309],[18,309],[19,309],[20,309],[21,309],[22,309],[23,309],[24,309],[25,309],[26,309],[27,309],[28,309],[29,309],[30,309],[31,309],[32,309],[33,309],182,183,184,185,186,187,188,189,190,[232,309],[233,309],[234,309],[235,309],[236,309],[237,309],289,290,291,308,309],"G-L 19":[34,35,36,37,38,180,288],"CLAW":[56],"Mateo Model J":[180,288],"PM-9":[[180,211,212,213],211,212,213,214,215,216,217,[288,211,212,213]],"R8":[180,288],"SOG":[180,283,284,288],"USP":[180,288],"Viper":[180,288],"WLT MPL":[180,288,333],"S12":[[181,243,244,245],243,244,245,246,247,248],"VIK-32L":[182,183,184,185,186,187,188,189,190,289,290,291],"36M AntiTank":[191,192,193,194,292,293],"NTW-20":[195,196]},"b":{"36M AntiTank":10,"47 TYP":30,"87 Target":12,"AA12":8,"AK":30,"APC9 Pro":20,"AT-43 MASS":4,"C96":10,"CLAW":8,"G-L 19":15,"G36":40,"GM6":5,"Grenade Launcher":6,"Kriss Vector 45":30,"LMG-P":100,"M16":20,"M4A1":30,"M60":100,"M79 Sawed-off":1,"Mateo Model J":6,"MG34":75,"NTW-20":5,"P90":35,"Painless":500,"PM-9":20,"PnP-2K":13,"PP-19 Vityaz":30,"PPSH-41":35,"R11 RSASS":20,"R8":8,"RPD":75,"RPK":30,"S12":6,"SA58":20,"SAW":200,"SCAR":8,"SOG":8,"Spectre M4":50,"Surplus Rifle":10,"Surplus Shotgun":5,"SVD":10,"TKB-0146":30,"USAS-12":8,"USP":12,"VEPR-12":10,"VH-Ambi 2":30,"VIK-32L":30,"Viper":17,"VKS Vykhlop":5,"WLT MPL":30,"XM25":4}};
+const SLOTN={MAG:"Magazine",MZL:"Muzzle",BRL:"Barrel",UPP:"Receiver",HGD:"Handguard",RAIL:"Rail light / laser",FGR:"Foregrip",OPT:"Optic",SCP:"Scope",GRP:"Grip",STK:"Stock",GAS:"Gas tube",CHG:"Charging handle",TRG:"Trigger",FS:"Front sight",RS:"Rear sight"};
+const SLOTORD=Object.keys(SLOTN);
+const PT=i=>{const p=PD.p[i];return{i,n:p[0],s:p[1],cap:p[2],sup:p[3],acc:p[4],rof:p[5],lvl:p[6],oth:p[7]}};
+const baseMag=w=>PD.b[w.n]??w.mag;
+function slotsFor(w){const by={};(PD.w[w.n]||[]).forEach(e=>{const a=Array.isArray(e)?e:[e],p=PT(a[0]);if(p.s==="MAG"&&!p.cap)return;p.req=a.slice(1);(by[p.s]=by[p.s]||[]).push(p)});
+  const L=p=>p.s==="MAG"&&!p.lvl?999:p.lvl||0;for(const k in by)by[k].sort((a,b)=>L(a)-L(b)||a.n.localeCompare(b.n));return by}
+function build(w){const by=slotsFor(w),cur=(S.parts[w.n])||{},out={};
+  for(const k in by){let v=cur[k];if(v===undefined&&k==="MAG"){const m=by.MAG.find(p=>p.cap===baseMag(w));v=m?m.i:-1}
+    const stock=k==="MAG"?by.MAG.find(p=>p.cap===baseMag(w)):null;
+    out[k]=(v!=null&&by[k].some(p=>p.i===v))?v:stock?stock.i:-1}
+  const picked=Object.values(out).filter(v=>v>=0).map(PT),ids=new Set(picked.map(p=>p.i)),needs={};
+  Object.entries(out).forEach(([k,v])=>{if(v<0)return;const p=by[k].find(x=>x.i===v);if(p.req.length&&!p.req.some(r=>ids.has(r)))needs[k]=p.req});
+  const mag=out.MAG>=0?PT(out.MAG).cap:baseMag(w);
+  return{by,out,picked,needs,mag,rof:picked.reduce((a,p)=>a+p.rof,0),sup:picked.some(p=>p.sup),acc:picked.reduce((a,p)=>a+p.acc,0),light:picked.some(p=>/Flashlight/.test(p.n)),canLight:!!(by.RAIL&&by.RAIL.some(p=>/Flashlight/.test(p.n)))}}
+const dl=(d,dec=0)=>{if(!d||Math.abs(d)<1e-9)return"";const v=Math.abs(d).toFixed(dec);return `<small class="${d>0?"up":"dn"}">${d>0?"▲ +":"▼ −"}${v}</small>`};
+let lastChg=null;
+function diffHTML(w,A,Bn,k){const pn=v=>v>=0?esc(PT(v).n):k==="MAG"?"stock magazine":"nothing";const bits=[];
+  if(A.mag!==Bn.mag)bits.push(`magazine ${A.mag} → ${Bn.mag} ${dl(Bn.mag-A.mag)}`,Bn.mag>A.mag?`<span class="dn">slower reload ▼</span>`:`<span class="up">faster reload ▲</span>`);
+  if(Math.abs(A.acc-Bn.acc)>1e-9)bits.push(`accuracy ${dl(Bn.acc-A.acc,3)}`);
+  if(Math.abs(A.rof-Bn.rof)>1e-9)bits.push(`fire rate ${dl(Bn.rof-A.rof,2)}`);
+  if(A.sup!==Bn.sup)bits.push(Bn.sup?`<span class="up">now suppressed ▲</span>`:`<span class="dn">no longer suppressed ▼</span>`);
+  if(A.light!==Bn.light)bits.push(Bn.light?"flashlight on":"flashlight off");
+  return `<b>${SLOTN[k]}:</b> ${pn(A.out[k]??-1)} → ${pn(Bn.out[k]??-1)} · ${bits.length?bits.join(" · "):"no stat change"}`}
+const plabel=p=>[p.n,p.s==="MAG"?p.cap+" rds":"",p.sup?"suppressed":"",p.acc?"+"+p.acc.toFixed(3)+" acc":"",p.lvl?"lvl "+p.lvl:"",p.oth].filter(Boolean).join(" · ");
+// container modules (wiki Rig Module page; prices from Bundleton in-game at Trusted/LL3, Oct 2026): [CU low, CU high, kg low, kg high, cr low, cr high]
+const MODS={L:[397.04,794.08,13.2,26.4,4505,18000],M:[297.92,595.85,9.9,19.8,3379,9000],S:[119.38,238.77,3.9,7.8,1349,4500]};
+// rigs (Bundleton in-game, Oct 2026; layouts checked against the wiki Rigs page): [name, container modules as position:size, large item bins (hold equipment or large loot), looted-weapon bins, class, price at Trusted (LL3), loyalty level to buy]
+const RIGS=[
+["Standard","T:L",1,0,"light",0,1],["Standard Gunrunner","T:L",1,1,"light",0,1],["Tiny","C:M",0,0,"tiny",1200000,3],
+["Enhanced","T:M L:S C:S R:S",1,0,"light",225000,1],["Enhanced Gunrunner","T:M C:M",1,1,"light",337500,1],["Equipment Runner","TL:M T:S TR:M C:M",3,0,"light",562500,1],
+["Medium Equipment Gunrunner","T:M TR:M C:M",2,1,"light",712500,1],["Heavy Container Gunrunner","T:L TR:L C:L R:L BL:L BR:L",0,1,"heavy",1387500,1],
+["Pack Mule","TL:M T:L TR:M L:M C:M R:M BL:L BR:L",1,0,"heavy",1237500,1],["Heavy Equipment Gunrunner","C:L",2,2,"super",1612500,1],["The Rack","C:L",8,0,"super",1875000,1]
+].map(r=>{const m=r[1].split(" ").map(x=>x.split(":"));return{n:r[0],mods:m.map(x=>x[1]).join(""),pos:m.map(x=>x[0]),eq:r[2],wb:r[3],cls:r[4],price:r[5],ll:r[6]}});
+const POSN={TL:"top left",T:"top",TR:"top right",L:"left",C:"center",R:"right",BL:"bottom left",B:"bottom",BR:"bottom right"};
+// High quality containers: bottom-left and bottom-right Large are sold from LL1, every other one needs Trusted (LL3)
+const hiLL=(m,pos)=>m==="L"&&(pos==="BL"||pos==="BR")?1:3;
+// scavs (wiki character pages, checked 28 Oct 2026; Old Man's skill tree matches the game). rigs: usable from the start; rsk: rigs unlocked by Rig Skills, in tree order; guns: trained weapon types; gsk: types unlocked by a training skill; carry: max Carry Capacity %
+const ALLR=RIGS.map(r=>r.n).filter(n=>n!=="Tiny"),NOHEAVY=ALLR.filter(n=>n!=="Heavy Equipment Gunrunner"&&n!=="The Rack");
+const CHARS={
+"Bag Man":{hp:1500,rigs:ALLR,carry:25,guns:"RFL SHG LMG HMG HRF",gsk:"GRL",note:"Slowest sprinter. Built to carry the most, but the carry skill is bugged right now."},
+"Mask Man":{hp:1150,rigs:NOHEAVY,carry:0,guns:"RFL SHG PST SMG",gsk:"HRF GRL LMG",note:"Sees extracts on the HUD from twice as far."},
+"Old Man":{hp:1000,rigs:["Standard","Standard Gunrunner","Enhanced","Enhanced Gunrunner"],rsk:["Equipment Runner","Medium Equipment Gunrunner","Pack Mule","Heavy Container Gunrunner"],carry:0,med:1,guns:"RFL SHG HRF PST",note:"Medical Expert makes heal items stronger."},
+"Shaman":{hp:900,rigs:["Standard","Standard Gunrunner","Enhanced","Enhanced Gunrunner","Equipment Runner","Medium Equipment Gunrunner"],carry:20,guns:"RFL SHG PST SMG",note:"Tactical Camera reaches 50 m instead of 30. Popular all-rounder."},
+"Scav Girl":{hp:800,rigs:["Tiny","Standard","Standard Gunrunner"],rsk:["Enhanced","Enhanced Gunrunner","Equipment Runner","Medium Equipment Gunrunner"],carry:0,guns:"RFL SHG PST SMG",note:"Sees loot on the HUD from twice as far. Fast, low health."},
+"Gunhead":{hp:2250,rigs:ALLR,carry:0,guns:"RFL SMG LMG HMG HRF SHG PST GRL",noheal:1,note:"Head gun with its own ammo. Can't heal or be revived."}};
+// XP cap per prestige level 1–35 (wiki Characters page; level 1 = 8,000 matches the game). Prestiging resets skills, so a whole skill chain has to fit under one cap.
+const XPCAP=[8000,9400,11100,13000,15300,17900,20900,24400,28500,33200,38700,45100,52500,61100,71100,82700,96200,111800,130000,151000,175600,204600,237000,275000,318000,356200,398900,446800,500400,560400,627600,702900,787200,881700,987500];
+const SKC=[2000,8500,22500,45000,79500]; // total XP for skill v1..v5 (2,000 / 6,500 / 14,000 / 22,500 / 34,500 each, in-game)
+const an=w=>(/^(SMG|LMG|[aeiou])/.test(w)?"an ":"a ")+w;
+const presFor=xp=>XPCAP.findIndex(c=>c>=xp)+1;
+const presOf=()=>Math.max(1,Math.min(50,+(S.pres||{})[S.char]||1));
+// HP: +40 per prestige level after the first, +1,000 in total from prestige 25 (wiki; checked in-game: Mask Man at prestige 18 = 1,830). Personal Quarters adds 10/15/25 % on top
+const hpOf=C=>Math.round((C.hp+(presOf()>=25?1000:40*(presOf()-1)))*(1+(+S.pq||0)/100));
+// water to fast travel straight to a region (in-game map, Oct 2026; shifts a little day to day). Tunnels, Scorched Enclave and Ashen Mesa are free once visited.
+const WATER={"Elephant Mausoleum":"3–4","Mech Trenches":"3–4","Scrapyard Nexus":"2","Frozen Swamp":"6–7","Stairway Gate":"7","Underground Cemetery":"10","Babel":"10","Downtown Lost Angels":"10"};
+// weights in kg (wiki Items table, 28 Oct 2026)
+const KG={"Advanced First Aid Kit":1,"Standard First Aid Kit":.7,"Small First Aid Kit":.3,"Energy Bar":.3,"Candy Bar":.3,"Pretzels":.3,"Happy Cookies":.5,"Potato Chips":.5,"Food Tin":.5,"ENuggets":.6,"MRE":.4,"Canteen":.7,"Deployable Drill":1,"Frag Grenade":.5,"Cluster Grenade":.8};
+const GKG={"Advanced Joint":0.7,"Assorted Medicine":0.3,"Ball Bearings":0.1,"Bar Supplies":2,"Basic Pliers":0.2,"Battery Charger":0.4,"Bolts":0.1,"Brawler Spinal Joint":1,"Bulkhead Lights":3,"Camera Lens":0.3,"Carbon Fiber":0.2,"Carbon Fiber Tube":0.5,"Clamp":0.2,"Cleaner":0.3,"Clear Tube":0.3,"Concrete Mixer":3,"Concrete Powder":3,"Construction Foam":0.4,"Cybernetic Lungs":1,"Cyborg Immunosuppressant":0.1,"Diagnostic Scanner":0.4,"Diodegradable Multi-tool":0.1,"Dogboro Cigarettes":0.3,"Drywall":1,"EDC Multi-tool":0.1,"Electric Motor":1,"EOD Armor Plate":0.8,"ES Lamp":0.3,"Eurasian Drone Cortex":1,"Eurasian HK's Mnemonic Index":1,"Eurasian IFF Chip LVL1":0.1,"Eurasian Sand-Diver HK Cortical Array":1,"Eurasian Sand-Diver HK Interface Core":1,"Eurasian Sand-Diver HK Memory Interface":1,"Europan Drone Flight Controller":1,"Europan IFF Chip LVL1":0.1,"Euruskan IFF Chip LVL1":0.1,"Explosive Charge":0.4,"Explosives":6,"Field Repair Kit":1,"Fleece":0.3,"Food Tin":0.5,"Frequency Tap":0.3,"Fuse":0.1,"Glue":0.2,"Goodies":0.3,"Gunpowder":0.3,"Gyroscopic Stabilizer":2,"Hand Drill":1,"Hard Shell Laptop":1,"Heavy-Duty Battery":5,"Heavy-Duty Trauma Kit":2,"Heirloom Seeds":0.2,"Hinoko Cigarettes":0.3,"Industrial Sealant":0.2,"Intelligence Cassette":0.3,"Intermediate Tool Set":1,"LCD":0.3,"Leather Hole Punch":0.5,"Light Bulb":0.2,"Liquid Cooling Unit":2,"Machine Parts":0.6,"Masking Tape":0.1,"Measuring Tape":0.1,"Medical Alcohol":0.2,"Medical Tools":0.4,"Metal Fragments":0.1,"Metal Pipe":1,"Metal Slats":1,"Military Battery":3,"Military Cables":0.3,"Military Circuitry":0.5,"Military Codebreaker":1,"Military Grade Lubricant":0.5,"Military Power Cell":0.5,"Mini MD Drive":0.1,"Motherboard":0.3,"MRE":0.4,"Multi-frequency Broadcaster":0.2,"Nails":0.1,"Neuralink Disc Player":0.3,"Nucky Gold Cigarettes":0.3,"Nuts":0.1,"Octogirl's Tool Set":1,"Old Tool Set":1,"OLED":0.7,"Orgamech Nervous System":1,"Organoid Memory Board":1,"Organoid Networking Board":0.7,"Organoid Outlet":1,"Organoid Plug":0.6,"Portable Generator":5,"Power Cell":1,"Power Schematics":0.3,"Precision Tool Set":5,"Preserved Cryo Coffee":0.3,"Pressure Gauge":1,"Printed Circuit Board":0.1,"Printing Resin":0.3,"Processor Board":0.2,"Quantum Hard Drive":0.3,"Railgun Breech Component":0.4,"Rat King's Wake":0.2,"Ratchet":1,"Rechargeable Battery":0.2,"Relay":0.2,"Ribbed Tube":0.2,"Rootkit Device":0.4,"Rotary Hammer":0.8,"Rum":1.3,"Scavenger's Tool Kit":3,"Screwdriver":0.1,"Screws":0.1,"Sentient Drill":3,"Sewing Kit":0.2,"Sheet Metal":1,"Sledgehammer":4,"Smuggled Organs":1,"Solar Battery":3,"Super Glue":0.2,"Telemetry Unit":0.5,"Tequila":1.3,"Toilet Paper":0.1,"Toy Car":0.1,"Toy Dinosaur":0.1,"Toy Train":0.1,"Turret Component":1,"UMEGA Media Player":0.3,"UV Light Bulb":0.3,"Valve Adjustment Tool":0.3,"Ventilation Regulator":0.8,"Vodka":1.3,"Water Thief's Mask \"Bozo\"":2,"Water Thief's Mask \"Oni\"":2,"Water Thief's Mask \"Thirsty\"":2,"WD40":0.2,"Weapon Parts":0.3,"Wetware Processor":3,"Wetware System":0.3,"Wires":0.2,"Wooden Plank":1,"Zonophor Tablets":0.2,"Paper Scrap":0.1,"Adrenaline Stim":0.5};
+// grenades: [CU, kg] (wiki, Jul 2026). Not sold by vendors: looted or crafted at the Munitions Printer.
+const GREN={"Frag Grenade":[5,.5],"Cluster Grenade":[25,.8]};
+// heal items: [HP healed, CU] (wiki item pages, Mar 2026). Food: CU; only the canteen's heal (80 HP) is listed on the wiki.
+const HEAL={"Advanced First Aid Kit":[678,30],"Standard First Aid Kit":[253,20],"Small First Aid Kit":[157,5]};
+const FOOD={"Energy Bar":5,"Candy Bar":5,"Pretzels":5,"Happy Cookies":10,"Potato Chips":10,"Food Tin":15,"ENuggets":15,"MRE":20,"Canteen":25};
+// consumables: [CU, kg, buy]
+const CONS={"Small First Aid Kit":[5,.3,2363],"Standard First Aid Kit":[20,.7,10500],"Advanced First Aid Kit":[30,1,27000],"Energy Bar":[5,.3,0],"Deployable Drill":[50,1,6000]};
+// regions by tunnel tier. d = difficulty 1 easy .. 4 very hard (player opinion, so marked ?)
+const TIERS=["A","B","C","D"];
+const REG=[
+{n:"Scorched Enclave",t:0,d:1,free:1},{n:"Ashen Mesa",t:0,d:1,free:1},
+{n:"Elephant Mausoleum",t:1,d:2,nsd:1},{n:"Scrapyard Nexus",t:1,d:3},{n:"Mech Trenches",t:1,d:3},
+{n:"Frozen Swamp",t:2,d:1,nsd:1},{n:"Stairway Gate",t:2,d:2,nsd:1},
+{n:"Babel",t:3,d:1,dead:1},{n:"Underground Cemetery",t:3,d:4,dark:1},{n:"Downtown Lost Angels",t:3,d:2,drill:1}
+];
+const RBY=Object.fromEntries(REG.map(r=>[r.n,r]));
+const DIFF=["","easy","medium","hard","very hard"];
+// estimates (marked ?): fights per leg, playstyle multiplier
+const FIGHTS={tun:2,1:2,2:3,3:4,4:5};
+const STYLE={sneak:.5,normal:1,loud:2};
+const rpf=w=>{const auto=w.fm.includes("A");return w.c==="GRL"?2:w.c==="HMG"?100:w.c==="LMG"?50:w.c==="SHG"?(auto?8:5):w.c==="HRF"?(auto?20:4):w.c==="PST"?(w.mag<=8?6:10):w.c==="SMG"?30:auto?25:8};
+const GLOSS={
+tunnel:["Tunnels","Underground passages that link the regions, A to D. To reach a far region you go Tunnel A, a region, Tunnel B, a region, and so on. Tunnels are free to travel to and have no Hunter Killers."],
+sup:["Suppressor","A muzzle attachment that makes your shots quieter. Most enemies can kill you faster than you can kill them, so staying unheard keeps fights small. Check the barrel letter: a type A barrel needs a type A muzzle."],
+cu:["CU","Rig space. Every item has a size in CU: a 5.56 round is 1 CU, a 7.62x39 round is 2, a standard first aid kit is 20. Your rig's capacity grows as you upgrade its modules."],
+fight:["Fights","Our rough unit for ammo. One fight is one firefight you can't avoid. A tunnel is about 2 (enemies respawn there), a region 2 to 5 depending on how rough it is. These are guesses until players report real numbers."],
+leg:["Leg","One stop on your route: a tunnel or a region."],
+grave:["Gravestone","When you die, you drop everything you carried. Your weapons and rig modules stay in your gravestone, and you can get them back by going into that region again."]
+};
+/* ---------- goal data copied from the Stash Ledger (commit 35a1c96): item -> [CU or "L" or null, {upgrade:n}, [[quest,n]]] ---------- */
+const GD={"items":{"Advanced Joint":[15,{},[["Oiled Joints",8]]],"Assorted Medicine":[15,{},[["Doctor Morrow Pt. 2",10]]],"Ball Bearings":[5,{"Turrets V1":8},[]],"Bar Supplies":[75,{},[["Fetch Bar Supplies",1]]],"Basic Pliers":[15,{"Manufacture Booster":1,"Munitions Printer":1},[]],"Battery Charger":[30,{"TV Small":1},[]],"Bolts":[5,{"Shooting Range":12,"+16 days":15},[["Build Mother Courage's Body Rack",40]]],"Brawler Spinal Joint":[25,{"Water Bots V2":6},[["Backbones for the Backbone",10]]],"Bulkhead Lights":[50,{"Bar V3":5,"Quarters v3":5},[]],"Camera Lens":[10,{"Turrets V2":5},[]],"Carbon Fiber":[15,{"+28 days":8},[]],"Carbon Fiber Tube":[20,{"Cradle Frame":6},[["A Cost Will Be Paid Pt. 3",1]]],"Clamp":[10,{"Repair Bench":1},[["A Cost Will Be Paid Pt. 3",1],["Build Mother Courage's Body Rack",10]]],"Cleaner":[5,{"Personal Quarters":8},[]],"Clear Tube":[10,{"Bar V1":6},[]],"Concrete Mixer":[75,{"Range v2":1,"Bar V2":2},[]],"Concrete Powder":[50,{"Cognition Cradle":3,"Range v2":3,"Bar V2":6},[]],"Construction Drone":[null,{"Bar V2":1,"Quarters v2":1,"Range v2":1,"+28 days":3,"Bar V3":3,"Cognition Cradle":3,"Garage":3,"Range v3":3,"Transmission Tower":3,"Cradle Frame":4,"Cradle Chamber":5},[]],"Construction Foam":[15,{"Cognition Cradle":3,"Range v3":3,"Transmission Tower":5},[]],"Cybernetic Lungs":[25,{},[["Breath of Fresh Smoke",3]]],"Cyborg Immunosuppressant":[15,{},[["Transmission Tower Pt. 4",10]]],"Diagnostic Scanner":[20,{"Quarters v3":1},[["Doctor Morrow Pt. 1",20]]],"Diodegradable Multi-tool":[5,{},[["Garage Days Pt. 1",1]]],"Dogboro Cigarettes":[5,{},[["Tobacco Journey Pt. 1",3],["Tobacco Journey Pt. 4",8],["Tobacco Journey Pt. 7",15],["Tobacco Journey Pt. 10",20],["Doctor Morrow Pt. 4",10]]],"Drywall":[35,{"Quarters v1":8,"Range v1":8},[]],"EDC Multi-tool":[5,{},[["Garage Days Pt. 1",1]]],"Electric Motor":[50,{"Turrets V2":3},[["A Cost Will Be Paid Pt. 3",1]]],"EOD Armor Plate":[35,{"Water Bots V3":6},[]],"ES Lamp":[15,{"Special Tree":5,"Range v1":8},[]],"Eurasian Drone Cortex":[25,{"Water Bots V1":5},[]],"Eurasian HK's Mnemonic Index":[null,{},[["Collect HK Components",6]]],"Eurasian IFF Chip LVL1":[5,{"Repair Bench":3},[]],"Eurasian Sand-Diver HK Cortical Array":[null,{},[["Collect Sand-Diver HK Components",4]]],"Eurasian Sand-Diver HK Interface Core":[null,{},[["Collect Sand-Diver HK Components",3]]],"Eurasian Sand-Diver HK Memory Interface":[null,{},[["Collect Sand-Diver HK Components",2]]],"Europan Drone Flight Controller":[35,{"Water Bots V1":5},[["Steel on High",3]]],"Europan IFF Chip LVL1":[5,{"Repair Bench":3},[["Go Home, Conscript",5]]],"Euruskan IFF Chip LVL1":[5,{"Repair Bench":3},[]],"Explosive Charge":[null,{},[["Achilles' Heel",5]]],"Explosives":["L",{"Personal Quarters":8},[]],"Field Repair Kit":[25,{"Repair Bench":1},[]],"Fleece":[15,{"Quarters v1":6},[]],"Food Tin":[15,{"Dog House":1,"The Bar":10},[]],"Frequency Tap":[20,{},[["Transmission Tower Pt. 1",9]]],"Fuse":[5,{"Manufacture Booster":6,"Munitions Printer":6},[]],"Glue":[5,{"Dog House":3},[]],"Goodies":[10,{"Bar V1":8},[]],"Gunpowder":[20,{"Turrets V1":3,"Manufacture Booster":6,"Munitions Printer":6},[]],"Gyroscopic Stabilizer":[35,{"Turrets V3":2},[["Target Awareness",1]]],"Hand Drill":[50,{"Personal Quarters":3},[]],"Hard Shell Laptop":[15,{"Garage":1},[]],"Heavy-Duty Battery":[25,{"Turrets V2":3},[]],"Heavy-Duty Trauma Kit":[50,{"Quarters v2":2},[]],"Heirloom Seeds":[20,{"Shrine":1},[]],"Hinoko Cigarettes":[5,{},[["Tobacco Journey Pt. 2",2],["Tobacco Journey Pt. 5",5],["Tobacco Journey Pt. 8",8],["Doctor Morrow Pt. 4",10]]],"Industrial Sealant":[10,{"+28 days":3,"Range v2":5},[["A Cost Will Be Paid Pt. 3",1]]],"Intelligence Cassette":[5,{"Music System":3},[]],"Intermediate Tool Set":[50,{"+16 days":1,"Manufacture Booster":1,"Munitions Printer":1,"Quarters v1":1},[]],"LCD":[15,{"TV Small":3},[]],"Leather Hole Punch":[25,{"Manufacture Booster":1,"Munitions Printer":1},[]],"Light Bulb":[10,{"Special Tree":5,"Quarters v1":12},[]],"Liquid Cooling Unit":[35,{"Water Bots V1":3},[]],"Machine Parts":[15,{"Water Bots V1":3},[]],"Masking Tape":[5,{"Shooting Range":6},[]],"Measuring Tape":[5,{"Dog House":1},[]],"Medical Alcohol":[10,{},[["Doctor Morrow Pt. 3",30]]],"Medical Tools":[15,{"Quarters v1":5},[]],"Metal Fragments":[5,{"Workshop":6,"The Bar":15},[]],"Metal Pipe":[20,{"Shooting Range":8,"+16 days":12,"The Bar":12},[]],"Metal Slats":[35,{"Special Tree":10},[]],"Military Battery":[60,{"Turrets V3":5},[]],"Military Cables":[10,{},[["A Cost Will Be Paid Pt. 3",1]]],"Military Circuitry":[25,{"Turrets V3":6},[]],"Military Codebreaker":[25,{"Cradle Chamber":3,"Transmission Tower":3},[]],"Military Grade Lubricant":[20,{"Turrets V2":2},[]],"Military Power Cell":[25,{"Cradle Frame":4},[]],"Mini MD Drive":[5,{"Music System":1},[]],"Motherboard":[10,{"Turrets V1":2},[]],"Mother Courage Codex":[null,{"+28 days":1},[]],"MRE":[20,{"Bar V2":6},[]],"Multi-frequency Broadcaster":[10,{"Transmission Tower":3,"Water Bots V3":3},[]],"Nails":[5,{"Range v1":10},[]],"Neuralink Disc Player":[10,{"Music System":1},[]],"Nucky Gold Cigarettes":[5,{},[["Tobacco Journey Pt. 3",1],["Tobacco Journey Pt. 6",3],["Tobacco Journey Pt. 9",5],["Doctor Morrow Pt. 4",10]]],"Nuts":[5,{"Shooting Range":12},[["Build Mother Courage's Body Rack",40]]],"Octogirl's Tool Set":[100,{},[["Transmission Tower Pt. 3",1]]],"Old Tool Set":[40,{"Workshop":1},[["Garage Days Pt. 1",1]]],"OLED":[25,{"Quarters v2":5,"TV Mega":5},[]],"Orga Codex":[null,{"Water Bots V3":1},[["A Cost Will Be Paid Pt. 1",2]]],"Orgamech Nervous System":[15,{},[["Giant's Senses",1]]],"Organoid Memory Board":[25,{"Water Bots V2":1},[]],"Organoid Networking Board":[35,{"Water Bots V3":1,"Transmission Tower":2},[]],"Organoid Outlet":[15,{"Water Bots V2":1,"Cradle Frame":5},[]],"Organoid Plug":[35,{"Water Bots V2":1,"Cradle Frame":5},[]],"Portable Generator":[75,{"Garage":2},[]],"Power Cell":[50,{},[["Achilles' Heel",2]]],"Power Schematics":[5,{},[["A Cost Will Be Paid Pt. 2",1]]],"Precision Tool Set":[45,{"Garage":1,"Water Bots V3":1},[]],"Preserved Cryo Coffee":[25,{"Shrine":1},[]],"Pressure Gauge":[25,{"+16 days":2},[]],"Printed Circuit Board":[10,{"TV Small":3},[]],"Printing Resin":[15,{"Workshop":6,"Bar V1":8},[["A Cost Will Be Paid Pt. 3",1]]],"Processor Board":[10,{"Water Bots V2":5},[["Transmission Tower Pt. 4",1]]],"Quantum Hard Drive":[15,{"TV Mega":1,"Cradle Chamber":5},[]],"Railgun Breech Component":[15,{},[["Electro-Magnetic Railway Pt. 2",1]]],"Rat King Codex":[null,{"Bar V3":1},[]],"Rat King's Wake":[null,{"Shrine":1},[]],"Ratchet":[25,{"Garage":1},[]],"Rechargeable Battery":[10,{"TV Small":6},[]],"Recovery Drone":[null,{},[["Achilles' Heel",1]]],"Relay":[10,{"TV Mega":10},[]],"Ribbed Tube":[10,{"The Bar":8},[]],"Rootkit Device":[25,{"Cradle Chamber":3},[]],"Rotary Hammer":[35,{"Quarters v2":2},[["Garage Days Pt. 1",1],["A Cost Will Be Paid Pt. 1",5]]],"Rum":[30,{"Bar V1":8},[]],"Scavenger's Tool Kit":[25,{"Personal Quarters":1,"Workshop":1},[]],"Screwdriver":[10,{"Water Bots V1":1},[]],"Screws":[5,{},[["Build Mother Courage's Body Rack",40]]],"Sentient Drill":[65,{"Bar V3":2,"Cognition Cradle":3},[]],"Sewing Kit":[10,{"Workshop":1},[]],"Sheet Metal":[35,{"Range v1":8,"Bar V1":12,"Dog House":12},[["Build Mother Courage's Body Rack",20]]],"Shield Officer Codex":[null,{"Range v3":1},[]],"Sledgehammer":[75,{"+28 days":1},[]],"Smuggled Organs":[15,{"Shrine":1},[]],"Solar Battery":[75,{"TV Mega":1},[]],"Super Glue":[5,{},[["Achilles' Heel",3]]],"Telemetry Unit":[15,{"Turrets V3":3},[]],"Tequila":[30,{"Bar V2":6},[]],"Toilet Paper":[10,{"Quarters v3":3},[]],"Toothy Codex":[null,{"Quarters v3":1},[]],"Toy Car":[5,{},[["Toyetic Action",1]]],"Toy Dinosaur":[5,{},[["Toyetic Action",1]]],"Toy Train":[5,{},[["Toyetic Action",1]]],"Turret Component":[25,{"Turrets V1":10},[]],"UMEGA Media Player":[25,{"Music System":1,"TV Mega":3},[]],"UV Light Bulb":[10,{"Special Tree":5,"Range v2":6,"Quarters v2":8},[]],"Valve Adjustment Tool":[20,{"+16 days":1},[]],"Ventilation Regulator":[25,{"Cognition Cradle":2},[]],"Vodka":[30,{"The Bar":10},[]],"Water Thief's Mask \"Bozo\"":[35,{"Range v3":1},[]],"Water Thief's Mask \"Oni\"":[35,{"Shrine":1},[]],"Water Thief's Mask \"Thirsty\"":[35,{"Range v3":1},[]],"WD40":[10,{"Range v1":2,"Turrets V2":5},[]],"Weapon Parts":[15,{"Turrets V1":5,"Special Tree":5},[]],"Wetware Processor":[75,{"Turrets V3":2,"Transmission Tower":2,"Cradle Chamber":4},[]],"Wetware System":[15,{},[["Nervous Upgrade",1]]],"Wires":[5,{"TV Small":5,"Music System":8},[]],"Wooden Plank":[25,{"Personal Quarters":8,"Shooting Range":10,"Dog House":12},[]],"Zonophor Tablets":[10,{"Quarters v3":3},[]],"Paper Scrap":[null,{},[["Transmission Tower Pt. 3",1]]],"Adrenaline Stim":[15,{},[["Violence of Action",1]]]},"groups":[["Water",["+16 days","+28 days","Water Bots V1","Water Bots V2","Water Bots V3"]],["Defense",["Turrets V1","Turrets V2","Turrets V3"]],["Workbenches",["Workshop","Munitions Printer","Manufacture Booster","Repair Bench"]],["Bar",["The Bar","Bar V1","Bar V2","Bar V3","Transmission Tower"]],["Personal Quarters",["Personal Quarters","Quarters v1","Quarters v2","Quarters v3"]],["Shooting Range",["Shooting Range","Range v1","Range v2","Range v3"]],["Cognition Cradle",["Cognition Cradle","Cradle Frame","Cradle Chamber"]],["Other",["Dog House","Garage","TV Small","TV Mega","Music System","Special Tree","Shrine"]]]};
+
+/* ---------- vendors and loot (wiki Vendors and Locations tables) ---------- */
+// v: item -> vendor letter + level (shown as LL level+1). l: item -> top loot spots "container.chance.maps" (maps in base36, LMAPS order). C: container names, prefixed C: crate, U: enemy, G: gacha box.
+const VD={"C":["U:Europan EOD MG34","U:Europan Officer","U:Europan Soldier M60","C:Armaments Bin","U:Europan Spotter","U:Cultist Soldier","G:Bunco Mystery Box","G:Connecting the Dots Mystery Box","G:Sealed Mystery Box","G:Scavenger's Box C","G:Donation Box","G:Scavenger's Box D","U:Europan Tormentor","U:Euruskan Heavy Officer GL","U:Europan Merkava Body Tank","U:Eurasian Assaulter","U:Eurasian Pack Leader","U:Euruskan Heavy AK","U:Cultist HeavyWeapons","U:Europan Conscript","U:Europan Heavy Elite","U:Cyborg P90","U:Cyborg P90 Skull Face","U:Eurasian Officer P90","U:Eurasian Brawler","U:Euruskan Heavy RPD","U:Euruskan Heavy RPK","U:Euruskan Sniper SVD","G:Scavenger's Box Z","G:Scavenger's Box A","C:Dead Orgamech","C:Military Crates","U:Europan Heavy Shotgunner","U:Eurasian God Sniper","U:Infected Euruskan Rider","G:Scavenger's Box B"],"v":{".308 Ammo":"A0B1L0",".357 Magnum Ammo":"A0B1L0",".45 ACP Ammo":"A0B1K0L0",".50 BMG":"A0B1K0L0","12-Gauge Buckshot":"A0B0K0L0","12.7x55mm Subsonic Ammo":"A0B1K0","20mm Turret":"A0D2","20x105mm Anti-Tank":"A0B2L2","36M AntiTank":"A0","40mm Grenade":"A0B2K2L2","47 TYP":"A0","5.45x39mm Ammo":"A0B0K0","5.45x39mm Ammo Surplus":"B0K0","5.56x45mm Ammo":"A0B1L0","5.7x28mm Ammo":"A0B1L0","7.62x39mm Ammo":"A0B0K0","7.62x54mmR Ammo":"A0B1K0","87 Target":"A0L1","9x19mm Ammo":"B0K0L0","AA-12 Handguard":"L2","AA12":"A0","AA12 Shotgun Magazine A":"L0","AA12 Shotgun Magazine B":"L0","ACG 2x":"K2L2","Advanced First Aid Kit":"A2B0H2","Aimp H2 Optic":"K1L1","Aimp Micro Optic":"K1L1","AK":"A0K0","AK Barrel B":"K0","AK Barrel C":"K0","APC9 Pro":"A0","APC9 Pro Barrel A":"L0","APC9 Pro Barrel B":"L0","APC9 Pro Stock A":"L0","C96":"A0L1","C96 Pistol Receiver A":"L0","C96 Pistol Receiver B":"L0","CLAW":"A0","Deployable Drill":"A0B0H0","E-TECH XP Optic":"K1L1","ET EFX Optic":"K1L1","ET HWS EXP Optic":"K1L1","ET XP2 Optic":"K1L1","Foregrip A":"K1L1","Foregrip B":"K1L1","Foregrip C":"K1L1","Foregrip D":"K1L1","Foregrip E":"K1L1","Foregrip F":"K1L1","Foregrip G":"K1L1","Foregrip H":"K1L1","Foregrip I":"K1L1","Foregrip J":"K1L1","Foregrip K":"K1L1","Foregrip L":"K1L1","Foregrip M":"K1L1","Foregrip N":"K1L1","Foregrip O":"K1L1","Foregrip P":"K1L1","Foregrip Q":"K1L1","G-L 19":"A0","G-L 19 Magazine A":"L0","G-L 19 Magazine B":"L0","G-L 19 Upper Assmbly A":"L0","G-L 19 Upper Assmbly B":"L0","G-L 19 Upper Assmbly C":"L0","G36":"A0L1","G36 Barrel A":"L0","G36 Barrel B":"L0","G36 Barrel C":"L0","G36 Handguard A":"L0","G36 Handguard B":"L0","G36 Handguard C":"L0","G36 Handguard D":"L0","G36 Handguard E":"L0","G36 Magazine A":"L0","G36 Magazine B":"L0","G36 Receiver A":"L0","G36 Receiver B":"L0","G36 Receiver C":"L0","G36 Receiver D":"L0","G36 Stock A":"L0","G36 Stock B":"L0","GM6":"A0","Grenade Launcher":"A0","H-sun Optic":"K1L1","IED":"A0D1","Kala Gas Tube B":"K0","Kala Gas Tube C":"K0","Kala Gas Tube D":"K0","Kala Gas Tube E":"K0","Kala Grip A":"K0","Kala Grip A-1":"K0","Kala Grip A-2":"K0","Kala Grip B":"K0","Kala Grip C":"K0","Kala Grip D":"K0","Kala Handguard B":"K0","Kala Handguard B-1":"K0","Kala Handguard B-2":"K0","Kala Handguard C":"K0","Kala Handguard D":"K0","Kala Handguard E":"K0","Kala Handguard F":"K0","Kala Handguard G":"K0","Kala Handguard H":"K2","Kala Handguard I":"K2","Kala Handguard J":"K2","Kala Magazine A":"K0","Kala Magazine B":"K0","Kala Magazine C":"K0","Kala Magazine D":"K0","Kala Magazine E":"K0","Kala Magazine E-1":"K0","Kala Magazine F":"K0","Kala Magazine G":"K0","Kala Magazine H":"K0","Kala Stock A":"K0","Kala Stock B":"K0","Kala Stock B-1":"K0","Kala Stock B-2":"K0","Kala Stock C":"K0","Kala Stock C-1":"K0","Kala Stock C-2":"K0","Kala Stock D":"K0","Kala Stock E":"K0","Kala Upper Assembly A":"K0","Kala Upper Assembly B":"K0","Kriss Vector 45":"A0L2","Kriss Vector Handguard A":"L0","Kriss Vector Handguard B":"L2","LMG-P":"A0","M16":"A0L0","M16 Barrel A":"L0","M16 Gas Tube A":"L0","M16 Gas Tube B":"L0","M16 Handguard A":"L0","M16 Handguard B":"L0","M16 Handguard C":"L0","M16 Handguard D":"L0","M16 Handguard E":"L0","M16 Handguard F":"L0","M16 Handguard G":"L0","M16 Handguard H":"L0","M16 Magazine A":"L0","M16 Magazine B":"L0","M16 Stock A":"L0","M16 Stock B":"L0","M16 Stock C":"L0","M16 Upper Assmbly A":"L0","M16 Upper Assmbly B":"L0","M16 Upper Assmbly C":"L0","M4A1":"A0L0","M4A1 Barrel A":"L0","M4A1 Barrel B":"L0","M4A1 Barrel C":"L0","M4A1 Gas Tube A":"L0","M4A1 Gas Tube B":"L0","M4A1 Gas Tube C":"L0","M4A1 Magazine A":"L0","M4A1 Magazine B":"L0","M4A1 Receiver A":"L0","M4A1 Receiver B":"L0","M4A1 Receiver C":"L0","M60":"A0","M60 Handguard A":"L0","M60 Handguard B":"L2","M79 Barrel A":"L0","M79 Barrel B":"L0","M79 Front Sight A":"L0","M79 Front Sight B":"L0","M79 Grip A":"L0","M79 Grip B":"L0","M79 Handguard A":"L0","M79 Handguard B":"L0","M79 Magazine A":"L0","M79 Magazine B":"L0","M79 Rear Sight A":"L0","M79 Rear Sight B":"L0","M79 Receiver A":"L0","M79 Receiver B":"L0","M79 Sawed-off":"A0","M79 Sight A":"L0","M79 Sight B":"L0","M79 Trigger A":"L0","M79 Trigger B":"L0","Mateo Model J":"A0","MG34":"A0","Muzzle Device A":"K0L0","Muzzle Device B":"K0L0","Muzzle Device C":"K0L0","Muzzle Device D":"K0L0","Muzzle Device E":"K0L0","Muzzle Device F":"K0L0","Muzzle Device G":"K0L0","Muzzle Device H":"K0L0","Muzzle Device I":"K0L0","Muzzle Device J":"K0L0","Muzzle Device K":"K0L0","Muzzle Device L":"K0L0","Muzzle Device M":"K0L0","Muzzle Device N":"K0L0","Muzzle Device O":"K0L0","Muzzle Device P":"K0L0","Muzzle Device Q":"K0L0","NSN Grip A":"K0L0","NSN Grip B":"K0L0","NSN Grip C":"L0","NSN Grip D":"K0L0","NSN Grip E":"K0L0","NSN Handguard A":"L0","NSN Handguard B":"L0","NSN Handguard C":"L0","NSN Handguard D":"L0","NSN Stock A":"K0L0","NSN Stock B":"K0L0","NSN Stock C":"K0L0","NSN Stock D":"K0L0","NTW-20":"A0","P Arms 3P Optic":"K1L1","P90":"A0L1","Painless":"A0","PM-9":"A0","PM-9 Barrel A":"K0","PM-9 Barrel B":"K0","PM-9 Barrel C":"K0","PM-9 Magazine A":"K0","PM-9 Magazine B":"K0","PM-9 Upper Assembly A":"K0L2","PM-9 Upper Assembly B":"L2","Pneumatic Jump":"A0D1","PnP-2K":"A0","PP-19 Vityaz":"A0K0","PP-19 Vityaz Barrel A":"K0","PP-19 Vityaz Barrel B":"K0","PP-19 Vityaz Grip A":"K0","PP-19 Vityaz Grip B":"K0","PP-19 Vityaz Handguard A":"K0","PP-19 Vityaz Handguard B":"K0","PP-19 Vityaz Magazine A":"K0","PP-19 Vityaz Magazine B":"K0","PP-19 Vityaz Stock A":"K0","PP-19 Vityaz Stock B":"K0","PP-19 Vityaz Trigger A":"K0","PP-19 Vityaz Trigger B":"K0","PP-19 Vityaz Upper Assembly A":"K0","PP-19 Vityaz Upper Assembly B":"K0","PPSH-41":"A0K1","R11 RSASS":"A0L1","R8":"A0L1","Rail Mounted Flashlight A":"K0L0","Rail Mounted Flashlight B":"K0L0","Rail Mounted Flashlight C":"K0L0","Rail Mounted Laser Sight A":"K0L0","Rail Mounted Laser Sight B":"K0L0","Rail Mounted Laser Sight C":"K0L0","Rig Light":"A0D0","RPD":"A0","RPD Barrel A":"K0","RPD Barrel B":"K0","RPD Barrel C":"K0","RPD Handguard A":"K0","RPD Handguard B":"K2","RPK":"A0K1","S12":"A0L0","S12 Shotgun Barrel A":"L0","S12 Shotgun Barrel B":"L0","S12 Shotgun Barrel C":"L0","S12 Shotgun Magazine A":"L0","S12 Shotgun Magazine B":"L0","S12 Shotgun Magazine C":"L0","SA58":"A0L1","SA58 Barrel A":"L0","SA58 Barrel B":"L0","SA58 Magazine A":"L0","SA58 Magazine B":"L0","SAW":"A0","SAW Barrel A":"L0","SAW Barrel B":"L0","SAW Gas Tube A":"L0","SAW Gas Tube B":"L0","SAW Grip A":"L0","SAW Grip B":"L0","SAW Handguard A":"L0","SAW Handguard B":"L0","SAW Handguard C":"L0","SAW Handguard D":"L2","SAW Magazine A":"L0","SAW Magazine B":"L0","SAW Stock A":"L0","SAW Stock B":"L0","SCAR":"A0L0","SCAR Barrel A":"L0","SCAR Barrel B":"L0","SCAR Barrel C":"L0","SCAR Barrel D":"L0","SCAR Handgaurd E":"L0","SCAR Handguard A":"L0","SCAR Handguard B":"L0","SCAR Handguard C":"L0","SCAR Handguard D":"L0","SCAR Handguard F":"L0","SCAR Magazine A":"L0","SCAR Magazine B":"L0","SCAR Magazine C":"L0","SCAR Magazine D":"L0","Sfox QueenKiller Optic":"K1L1","SIGS Cheers 2x":"K2L2","Small First Aid Kit":"A0B0H0","SOG":"A0L2","SOG Receiver A":"L0","SOG Receiver B":"L0","Spectre M4":"A0L2","Spectre M4 Handguard":"L2","Spook Optic":"K1L1","Standard First Aid Kit":"A1B0H1","Stein R Optic":"K1L1","Suppressed Muzzle Device A":"K0L0","Suppressed Muzzle Device B":"K0L0","Suppressed Muzzle Device C":"K0L0","Suppressed Muzzle Device D":"K0L0","Suppressed Muzzle Device E":"K0L0","Suppressed Muzzle Device F":"K0L0","SVD":"A0K1","SVD Barrel A":"K0","SVD Barrel B":"K0","SVD Barrel C":"K0","SVD Barrel D":"K0","SVD Stock A":"K0","SVD Stock B":"K0","SVD Upper Assmbly A":"K0","SVD Upper Assmbly B":"K0","SVD Upper Assmbly C":"K0","SVD Upper Assmbly D":"K0","SVD Upper Assmbly E":"K0","SVD Upper Assmbly F":"K0","Tactical Camera":"A0D0","Target Pistol Magazine A":"L0","Target Pistol Magazine B":"L0","TKB-0146":"A0K1","TKB-0146 Handguard A":"K0","TKB-0146 Handguard B":"K2","Tri M Optic":"K1L1","TrueAimer 4x":"K2L2","USAS-12":"A0","USAS-12 Shotgun Barrel A":"K0","USAS-12 Shotgun Barrel B":"K0","USAS-12 Shotgun Barrel C":"K0","USAS-12 Shotgun Handguard B":"L2","USAS-12 Shotgun Magazine A":"K0","USAS-12 Shotgun Magazine B":"K0","USAS-12 Shotgun Magazine C":"K0","USP":"A0","VEPR-12":"A0","Vepr-12 Shotgun Handguard A":"K0","Vepr-12 Shotgun Handguard B":"K0","Vepr-12 Shotgun Handguard C":"K0","Vepr-12 Shotgun Magazine A":"K0","Vepr-12 Shotgun Magazine B":"K0","VH-Ambi 2":"A0","VHS2 Upper Assembly B":"K2","VIK-32L":"A0","Viper":"A0L0","VKS Front Sight":"K2","VKS Handguard A":"K0","VKS Handguard B":"K2","VKS Vykhlop":"A0K0","Vtex Optic":"K1L1","Vtex Raz Gen 2 Optic":"K1L1","Vtex Spit 3x":"K2L2","Vtex Strike Optic":"K1L1","Vtex V Optic":"K1L1","Walther MPL Handguard":"L2","WLT MPL":"A0L0","XM25":"A0","Zeni-B P6 Optic":"K1L1"},"l":{".308 Ammo":"0.100 1.100 2.100",".357 Magnum Ammo":"3.85.79d8 3.85.243b 3.85.56c",".45 ACP Ammo":"4.100 3.85.79d8 3.85.243b",".50 BMG":"5.100","12-Gauge Buckshot":"3.100.12403ab 3.100.79d8 3.100.243b","12.7x55mm Subsonic Ammo":"3.75.79d8 3.75.56c 6.50","20mm Turret":"7.10 8.10 9.5","20x105mm Anti-Tank":"3.50.79d8","36M AntiTank":"a.9 b.1","40mm Grenade":"c.100 d.100 e.31","47 TYP":"b.1","5.45x39mm Ammo":"f.100 g.100 h.100","5.56x45mm Ammo":"i.100 j.100 k.100","5.7x28mm Ammo":"l.100 m.100 n.100","7.62x39mm Ammo":"o.100 p.100 q.100","7.62x54mmR Ammo":"r.100 6.50","87 Target":"s.50 a.32 t.25","9x19mm Ammo":"3.100.12403ab 3.100.79d8 3.100.243b","AA12":"a.2 b.1","AA12 Shotgun Magazine B":"3.25.79d8 3.2.56c 3.1.243b","ACG 2x":"3.75.79d8 3.75.243b 3.75.56c","Aimp H2 Optic":"3.75.79d8 3.75.243b 3.75.56c","Aimp Micro Optic":"3.75.79d8 3.75.243b 3.75.56c","AK":"a.55 b.1","AK Barrel B":"u.10.2","AK Barrel C":"u.11.2","APC9 Pro":"7.20 8.20 a.18","C96":"s.50 a.36 t.25","CLAW":"b.1","Deployable Drill":"v.50.79d8 v.50.56c 6.30","E-TECH XP Optic":"3.75.79d8 3.75.243b 3.75.56c","Energy Bar":"w.100 l.75 m.75","ET EFX Optic":"3.75.79d8 3.75.243b 3.75.56c","ET HWS EXP Optic":"3.50.79d8 3.50.56c u.31.2","ET XP2 Optic":"3.75.79d8 3.75.243b 3.75.56c","Foregrip A":"3.100.10a 3.100.79d8 3.100.243b","Foregrip B":"3.100.10a 3.100.79d8 3.100.243b","Foregrip C":"3.75.79d8 3.75.243b 3.75.56c","Foregrip D":"3.75.79d8 3.75.243b 3.75.56c","Foregrip E":"3.75.79d8 3.75.243b 3.75.56c","Foregrip F":"3.75.79d8 3.75.243b 3.75.56c","Foregrip G":"3.50.79d8 3.50.56c 3.2.243b","Foregrip H":"3.50.79d8 3.50.56c 3.2.243b","Foregrip I":"3.50.79d8 3.50.56c 3.2.243b","Foregrip J":"3.50.79d8 3.50.56c 3.2.243b","Foregrip K":"3.25.79d8 3.2.56c 3.1.243b","G-L 19":"s.50 a.27 t.25","G-L 19 Magazine B":"3.50.79d8 3.50.56c 3.2.243b","G36":"7.20 a.12 b.1","G36 Magazine B":"3.75.79d8 3.75.243b 3.75.56c","GM6":"a.9 b.1","Grenade Launcher":"a.1 b.1","H-sun Optic":"3.75.79d8 3.75.243b 3.75.56c","HK CAWS Magazine B":"3.25.79d8 3.2.56c 3.1.243b","IED":"s.50 t.25 7.20","Kala Gas Tube B":"u.11.2","Kala Gas Tube C":"u.10.2","Kala Gas Tube D":"u.11.2","Kala Gas Tube E":"u.10.2","Kala Grip A":"u.11.2","Kala Grip A-1":"u.10.2","Kala Grip A-2":"u.9.2","Kala Grip B":"u.10.2","Kala Grip C":"u.11.2","Kala Grip D":"u.10.2","Kala Handguard B":"u.10.2","Kala Handguard B-1":"u.9.2","Kala Handguard B-2":"u.10.2","Kala Handguard C":"u.10.2","Kala Handguard D":"u.11.2","Kala Handguard E":"u.9.2","Kala Handguard F":"u.11.2","Kala Handguard G":"u.10.2","Kala Magazine A":"u.9.2","Kala Magazine B":"3.100.10a 3.100.79d8 3.100.243b","Kala Magazine C":"3.100.10a 3.100.79d8 3.100.243b","Kala Magazine D":"3.75.79d8 3.75.243b 3.75.56c","Kala Magazine E":"3.75.79d8 3.75.243b 3.75.56c","Kala Magazine E-1":"3.75.79d8 3.75.243b 3.75.56c","Kala Magazine F":"3.50.79d8 3.50.56c u.10.2","Kala Magazine G":"3.50.79d8 3.50.56c u.9.2","Kala Magazine H":"3.25.79d8 u.11.2 3.2.56c","Kala Magazine I":"3.25.79d8 3.2.56c 3.1.243b","Kala Stock A":"u.10.2","Kala Stock B":"u.10.2","Kala Stock B-1":"u.10.2","Kala Stock B-2":"u.10.2","Kala Stock C":"u.10.2","Kala Stock C-1":"u.10.2","Kala Stock C-2":"u.11.2","Kala Stock D":"u.10.2","Kala Stock E":"u.10.2","Kala Upper Assembly A":"u.11.2","Kala Upper Assembly B":"u.10.2","Kriss Vector 45":"a.5 b.1","LMG-P":"b.1","M16":"a.55 b.1","M16 Magazine B":"3.75.79d8 3.75.243b 3.75.56c","M16 Upper Assmbly B":"x.11","M4A1":"a.36 7.20 b.1","M4A1 Barrel A":"u.11.2 e.11","M4A1 Barrel B":"e.11 u.9.2","M4A1 Barrel C":"u.9.2 e.9","M4A1 Charging Handle A":"e.11 u.10.2","M4A1 Charging Handle B":"u.11.2 e.10","M4A1 Charging Handle C":"u.10.2 e.10","M4A1 Gas Tube A":"u.10.2 e.10","M4A1 Gas Tube B":"u.11.2 e.9","M4A1 Gas Tube C":"u.10.2 e.10","M4A1 Magazine":"3.50.79d8 3.50.56c 3.2.243b","M4A1 Magazine A":"u.10.2 e.10","M4A1 Magazine B":"3.25.79d8 e.11 u.10.2","M4A1 Receiver A":"u.10.2 e.10","M4A1 Receiver B":"u.11.2 e.11","M4A1 Receiver C":"u.10.2 e.9","M60":"a.3 b.1","M79 Sawed-off":"a.3 b.1","Mateo Model J":"9.5 b.1","MG34":"a.3 b.1","Muzzle Device A":"3.100.10a 3.100.79d8 3.100.243b","Muzzle Device B":"3.100.10a 3.100.79d8 3.100.243b","Muzzle Device C":"3.100.10a 3.100.79d8 3.100.243b","Muzzle Device D":"3.100.10a 3.100.79d8 3.100.243b","Muzzle Device E":"3.100.10a 3.100.79d8 3.100.243b","Muzzle Device F":"3.100.10a 3.100.79d8 3.100.243b","Muzzle Device G":"3.75.79d8 3.75.243b 3.75.56c","Muzzle Device H":"3.75.79d8 3.75.243b 3.75.56c","Muzzle Device I":"3.75.79d8 3.75.243b 3.75.56c","Muzzle Device J":"3.75.79d8 3.75.243b 3.75.56c","Muzzle Device K":"3.75.79d8 3.75.243b 3.75.56c","Muzzle Device L":"3.75.79d8 3.75.243b 3.75.56c","Muzzle Device M":"3.50.79d8 3.50.56c 3.2.243b","Muzzle Device N":"3.50.79d8 3.50.56c 3.2.243b","Muzzle Device O":"3.50.79d8 3.50.56c 3.2.243b","Muzzle Device P":"3.25.79d8 3.2.56c 3.1.243b","Muzzle Device Q":"3.25.79d8 3.2.56c 3.1.243b","NSN Grip A":"u.11.2 e.11","NSN Grip B":"u.10.2 e.10","NSN Grip C":"u.11.2 e.9","NSN Handguard A":"u.9.2 e.9","NSN Handguard B":"u.11.2 e.9","NSN Handguard C":"u.11.2 e.10","NSN Stock A":"u.11.2 e.10","NSN Stock B":"u.11.2 e.9","NSN Stock C":"u.10.2 e.9","NTW-20":"a.9 b.1","P Arms 3P Optic":"3.75.79d8 3.75.243b 3.75.56c","P90":"a.12 b.1","Painless":"a.1 b.1","PM-9":"a.18 9.5 b.1","PM-9 Magazine B":"3.75.79d8 3.75.243b 3.75.56c","Pneumatic Jump":"7.10 8.10 9.5","PnP-2K":"b.1","PP-19 Vityaz":"a.16 9.5 b.1","PP-19 Vityaz Barrel A":"y.21","PP-19 Vityaz Barrel B":"y.18","PP-19 Vityaz Grip A":"y.21","PP-19 Vityaz Grip B":"y.21","PP-19 Vityaz Handguard A":"y.22","PP-19 Vityaz Handguard B":"y.21","PP-19 Vityaz Magazine A":"y.21","PP-19 Vityaz Magazine B":"3.75.79d8 3.75.243b 3.75.56c","PP-19 Vityaz Stock A":"y.20","PP-19 Vityaz Stock B":"y.19","PP-19 Vityaz Upper Assembly A":"y.18","PP-19 Vityaz Upper Assembly B":"y.19","PPSH-41":"a.14 9.5 b.1","R11 RSASS":"a.13 b.1","R8":"a.31 9.5 b.1","Rail Mounted Flashlight A":"3.100.10a 3.100.79d8 3.100.243b","Rail Mounted Flashlight B":"3.75.79d8 3.75.243b 3.75.56c","Rail Mounted Flashlight C":"3.50.79d8 3.50.56c 3.2.243b","Rail Mounted Laser Sight A":"3.100.10a 3.100.79d8 3.100.243b","Rail Mounted Laser Sight B":"3.75.79d8 3.75.243b 3.75.56c","Rail Mounted Laser Sight C":"3.50.79d8 3.50.56c 3.2.243b","Rig Light":"7.50 s.50 8.50","RPD":"a.3 b.1","RPK":"a.8 b.1","S12":"a.55 7.30 9.5","S12 Shotgun Magazine B":"3.75.79d8 3.75.243b 3.75.56c","S12 Shotgun Magazine C":"3.50.79d8 3.50.56c 3.2.243b","SA58":"7.20 a.13 b.1","SA58 Magazine B":"3.25.79d8 3.2.56c 3.1.243b","SAW":"a.3 b.1","SAW Magazine B":"3.25.79d8 3.2.56c 3.1.243b","SCAR":"a.23 7.20 b.1","SCAR Magazine B":"3.25.79d8 3.2.56c 3.1.243b","SCAR Magazine C":"3.25.79d8 3.2.56c 3.1.243b","SCAR Magazine D":"3.75.79d8 3.75.243b 3.75.56c","Sfox QueenKiller Optic":"3.50.79d8 3.50.56c u.33.2","SIGS Cheers 2x":"3.75.79d8 3.75.243b 3.75.56c","SOG":"a.23 z.10 9.5","Spectre M4":"a.6 b.1","Spook Optic":"3.75.79d8 3.75.243b 3.75.56c","Stein R Optic":"3.50.79d8 3.50.56c u.27.2","Suppressed Muzzle Device A":"3.25.79d8 3.2.56c 3.1.243b","Suppressed Muzzle Device B":"3.25.79d8 3.2.56c 3.1.243b","Suppressed Muzzle Device C":"3.25.79d8 3.2.56c 3.1.243b","Suppressed Muzzle Device D":"3.25.79d8 3.2.56c 3.1.243b","Suppressed Muzzle Device E":"3.25.79d8 3.2.56c 3.1.243b","Suppressed Muzzle Device F":"3.25.79d8 3.2.56c 3.1.243b","SVD":"a.13 b.1","Tactical Camera":"7.30 b.1","Target Pistol Magazine B":"3.75.79d8 3.75.243b 3.75.56c","TKB-0146":"a.14 b.1","Tri M Optic":"3.75.79d8 3.75.243b 3.75.56c","TrueAimer 4x":"e.28 3.25.79d8 y.11","USAS-12":"7.20 a.1 b.1","USAS-12 Shotgun Magazine B":"3.25.79d8 3.2.56c 3.1.243b","USAS-12 Shotgun Magazine C":"3.75.79d8 3.75.243b 3.75.56c","USP":"a.17 z.10 9.5","VEPR-12":"a.2 b.1","Vepr-12 Shotgun Magazine B":"3.25.79d8 3.2.56c 3.1.243b","VH-Ambi 2":"b.1","VIK-32L":"b.1","Viper":"a.25 t.25 z.10","VKS Vykhlop":"a.39 b.1","Vtex Optic":"3.75.79d8 3.75.243b 3.75.56c","Vtex Raz Gen 2 Optic":"3.50.79d8 3.50.56c u.32.2","Vtex Spit 3x":"3.50.79d8 3.50.56c y.11","Vtex Strike Optic":"3.75.79d8 3.75.243b 3.75.56c","Vtex V Optic":"3.75.79d8 3.75.243b 3.75.56c","WLT MPL":"a.20 9.5 b.1","XM25":"a.1 b.1","Zeni-B P6 Optic":"3.75.79d8 3.75.243b 3.75.56c"}};
+const VN={A:["Auto-Vendor","Scavengers"],B:["Bunco","Scavengers"],D:["Bundleton","Scavengers"],H:["Heisenburg","Scavengers"],K:["Kane","Eurasia"],L:["Luca","Europa"],S:["Slade","Scavengers"]};
+const VUNLOCK={K:"after the Steel on High quest and 4 days of water in the tank",L:"after the Burst Transmission quest and 11 days of water in the tank",D:"at 16 days of water in the tank"};
+const LMAPS=["Scorched Enclave","Ashen Mesa","Elephant Mausoleum","Scrapyard Nexus","Mech Trenches","Frozen Swamp","Stairway Gate","Babel","Underground Cemetery","Downtown Lost Angels","Tunnel A","Tunnel B","Tunnel C","Tunnel D","Tunnels","Innards"];
+const vendOf=n=>((VD.v[n]||"").match(/[A-Z]\d/g)||[]).map(x=>({v:x[0],ll:+x[1]+1}));
+const lootOf=n=>(VD.l[n]||"").split(" ").filter(Boolean).map(t=>{const a=t.split("."),c=VD.C[parseInt(a[0],36)],m=a[2]&&a[2]!=="N"?a[2]:"";
+  return{ty:c[0],n:c.slice(2),ch:+a[1],maps:[...m].map(x=>LMAPS[parseInt(x,36)]),night:a.includes("N")}});
+
+/* ---------- storage: reads the ledger's tfw-* keys, writes only tfw-lo-* ---------- */
+const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,String(v))}catch(e){return null}};
+const J=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const fmt=n=>Math.round(n).toLocaleString("en-US");
+const DEF={target:"Scorched Enclave",via:"walk",viatun:1,mids:{},night:false,prim:"AK",pammo:"545",parts:{},smag:{},mag:{},sec:"USP",rig:"Standard",cap:{},char:"",carry:{},medsk:0,pres:{},pq:0,mods:{},gren:"",grenq:2,style:"normal",goal:null,reached:[],meds:{}};
+let S=Object.assign({},DEF,J("tfw-lo-state",{}));
+/* every saved or shared value is checked against what the page offers; anything else falls back to the default */
+const own=(o,k)=>typeof k==="string"&&Object.prototype.hasOwnProperty.call(o,k);
+const isObj=v=>!!v&&typeof v==="object"&&!Array.isArray(v);
+const intIn=(v,lo,hi)=>Number.isInteger(v)&&v>=lo&&v<=hi;
+function clean(){
+  if(!own(WBY,S.prim))S.prim="M4A1";
+  if(!own(RBY,S.target))S.target="Scorched Enclave";
+  if(!RIGS.some(r=>r.n===S.rig))S.rig="Standard";
+  if(S.char!==""&&!own(CHARS,S.char))S.char="";
+  if(S.sec!==""&&!(own(WBY,S.sec)&&["PST","GRL"].includes(WBY[S.sec].c)))S.sec="";
+  if(!own(STYLE,S.style))S.style="normal";
+  if(!["walk","tunnel","direct"].includes(S.via))S.via="walk";
+  if(!intIn(S.viatun,0,3))S.viatun=1;
+  if(S.gren!==""&&!own(GREN,S.gren))S.gren="";
+  if(!intIn(S.grenq,1,6))S.grenq=2;
+  if(![0,10,15,25].includes(S.pq))S.pq=0;
+  if(![0,5,10,15,20,25].includes(S.medsk))S.medsk=0;
+  if(typeof S.pammo!=="string")S.pammo="";
+  const objOf=(k,okK,okV)=>{const o={};if(isObj(S[k]))for(const [a,b] of Object.entries(S[k]))if(okK(a)&&okV(b))o[a]=b;S[k]=o};
+  objOf("carry",a=>own(CHARS,a),v=>[0,5,10,15,20,25].includes(v));
+  objOf("pres",a=>own(CHARS,a),v=>intIn(v,1,50));
+  objOf("mods",a=>RIGS.some(r=>r.n===a),v=>typeof v==="string"&&/^[01]{0,9}$/.test(v));
+  objOf("smag",a=>own(WBY,a),v=>Number.isInteger(v));
+  objOf("parts",a=>own(WBY,a),v=>isObj(v)&&Object.entries(v).every(([k,i])=>own(SLOTN,k)&&Number.isInteger(i)));
+  objOf("mids",a=>/^[0-3]$/.test(a),v=>own(RBY,v));
+  objOf("meds",a=>a==="food"||a==="main"||a==="backup",v=>typeof v==="string");
+  for(const k of ["main","backup"])if(k in S.meds&&!own(HEAL,S.meds[k]))delete S.meds[k];
+  if("food" in S.meds&&!own(FOOD,S.meds.food))delete S.meds.food;
+  S.reached=Array.isArray(S.reached)?S.reached.filter(n=>own(RBY,n)):[];
+  if(S.goal!==null&&typeof S.goal!=="string")S.goal=null;
+  S.night=false}
+clean();
+/* share links: #lo=<base64url JSON> holds the loadout only (no goal, no reached regions). Only known keys with the right type are taken. */
+const SHARE_KEYS={target:"s",via:"s",viatun:"n",mids:"o",prim:"s",pammo:"s",parts:"o",sec:"s",smag:"o",rig:"s",char:"s",carry:"o",medsk:"n",mods:"o",gren:"s",grenq:"n",style:"s",meds:"o",pres:"o",pq:"n"};
+const b64e=t=>btoa(unescape(encodeURIComponent(t))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const b64d=t=>decodeURIComponent(escape(atob(t.replace(/-/g,"+").replace(/_/g,"/"))));
+const shareState=()=>{const o={};for(const k in SHARE_KEYS){let v=S[k];
+  if(k==="parts")v={[S.prim]:(S.parts||{})[S.prim]};if(k==="smag")v=S.sec?{[S.sec]:(S.smag||{})[S.sec]}:{};if(k==="carry"||k==="pres")v=S.char?{[S.char]:(S[k]||{})[S.char]}:{};if(k==="mods")v={[S.rig]:(S.mods||{})[S.rig]};
+  o[k]=v}return JSON.parse(JSON.stringify(o))};
+let sharedPrev=null;
+try{const h=location.hash.match(/^#lo=([A-Za-z0-9_-]+)$/);if(h){const o=JSON.parse(b64d(h[1]));if(o&&typeof o==="object"){sharedPrev=JSON.stringify(S);
+  for(const k in SHARE_KEYS){if(!(k in o))continue;const v=o[k],t=SHARE_KEYS[k];
+    if(t==="s"&&typeof v==="string"&&v.length<80)S[k]=v;else if(t==="n"&&typeof v==="number"&&isFinite(v))S[k]=v;
+    else if(t==="o"&&v&&typeof v==="object"&&!Array.isArray(v)&&JSON.stringify(v).length<4000)S[k]=Object.assign({},S[k],v)}}
+  clean();try{history.replaceState(null,"",location.pathname+location.search)}catch(e){}}}catch(e){sharedPrev=null}
+const saveS=()=>LS("tfw-lo-state",JSON.stringify(S));
+let sf=(LS("tfw-lo-sf")??LS("tfw-sf"))==="1";
+let cb=(LS("tfw-lo-cb")??LS("tfw-cb"))==="1";
+let mode=LS("tfw-lo-mode")||"rookie";
+const done=J("tfw-done",{}), have=J("tfw-have",{}), ledgerGoal=LS("tfw-goal")||"";
+const $=id=>document.getElementById(id);
+const U=t=>`<span class="unsure" role="img" aria-label="Estimate" title="${esc(t)}">?</span>`;
+const revealed=new Set();
+const spl=t=>revealed.has(t)?`<span class="spoil shown">${t}</span>`:`<span class="spoil" tabindex="0" role="button" aria-label="Hidden spoiler, press to reveal" title="Spoiler: tap to reveal" data-sp="${esc(t)}">${t}</span>`;
+const reveal=el=>{revealed.add(el.innerHTML);el.classList.add("shown");["role","aria-label","title","tabindex","data-sp"].forEach(a=>el.removeAttribute(a))};
+
+/* ---------- spoiler helpers ---------- */
+const reached=n=>!sf||RBY[n].t===0||S.reached.includes(n);
+const regName=(n,html=true)=>reached(n)?(html?esc(n):n):html?spl(esc(n)):`Tunnel ${TIERS[RBY[n].t]} region ${REG.filter(r=>r.t===RBY[n].t).indexOf(RBY[n])+1}`;
+const isCls=n=>sf&&CLASSIFIED.has(n);
+const SPOIL_ITEM=/rail ?gun|AT-43/i;
+const iName=n=>sf&&SPOIL_ITEM.test(n)?spl(esc(n)):esc(n);
+const wName=(w,html=true)=>isCls(w.n)?(html?spl(esc(w.n)):`[classified ${CAT[w.c][1]}]`):(html?esc(w.n):w.n);
+
+/* ---------- goal (same rules as the ledger) ---------- */
+const GI=GD?GD.items:{};
+const STORY=[...new Set(Object.values(GI).flatMap(v=>v[2].map(x=>x[0])))].sort((a,b)=>a.localeCompare(b,undefined,{numeric:true}));
+const LINES={};STORY.forEach(q=>{const l=q.replace(/ Pt\.? ?\d+$/,"");(LINES[l]=LINES[l]||[]).push(q)});
+function goalItems(g){if(!g)return[];const t=g.slice(0,2),n=g.slice(2),out=[];
+  if(t==="u:"){if(done[n])return out;Object.entries(GI).forEach(([k,v])=>{if(v[1][n])out.push({n:k,s:v[0],need:v[1][n]})})}
+  else{const parts=(t==="l:"?(LINES[n]||[]):[n]).filter(p=>!done[p]);Object.entries(GI).forEach(([k,v])=>{const a=v[2].filter(x=>parts.includes(x[0])).reduce((s,x)=>s+x[1],0);if(a)out.push({n:k,s:v[0],need:a})})}
+  return out}
+const goalKnown=g=>{const t=g.slice(0,2),n=g.slice(2);return t==="u:"?Object.values(GI).some(v=>own(v[1],n)):t==="l:"?own(LINES,n):t==="q:"?STORY.includes(n):false};
+const curGoal=()=>S.goal===null?ledgerGoal:S.goal;
+const goalName=g=>!g?"":g[0]==="u"?g.slice(2):sf?"story goal":g.slice(2);
+
+/* ---------- route ---------- */
+function route(){
+  const tg=RBY[S.target]||REG[0],ti=tg.t;let s=0;
+  if(S.via==="direct")return[{k:"reg",r:tg,tgt:1}];
+  if(S.via==="tunnel")s=Math.min(S.viatun,ti);
+  const legs=[];
+  for(let k=s;k<=ti;k++){legs.push({k:"tun",t:k});
+    if(k<ti){const m=RBY[S.mids[k]];legs.push({k:"reg",r:m&&m.t===k?m:REG.find(r=>r.t===k)})}
+    else legs.push({k:"reg",r:tg,tgt:1})}
+  return legs}
+const legFights=l=>l.k==="tun"?FIGHTS.tun:FIGHTS[l.r.d]+(S.night?1:0);
+
+/* ---------- build controls ---------- */
+function fillTarget(){
+  $("target").innerHTML=TIERS.map((t,i)=>`<optgroup label="Through Tunnel ${t}">`+REG.filter(r=>r.t===i).map(r=>`<option value="${esc(r.n)}">${esc(regName(r.n,false))}</option>`).join("")+`</optgroup>`).join("");
+  $("target").value=S.target}
+function fillGuns(){
+  const groups=Object.keys(CAT).map(c=>{const ws=W.filter(w=>w.c===c);return ws.length?`<optgroup label="${CAT[c][0]}">`+ws.map(w=>`<option value="${esc(w.n)}">${esc(wName(w,false))}</option>`).join("")+`</optgroup>`:""}).join("");
+  $("prim").innerHTML=groups;$("prim").value=S.prim;
+  $("sec").innerHTML=`<option value="">None</option>`+["PST","GRL"].map(c=>`<optgroup label="${CAT[c][0]}">`+W.filter(w=>w.c===c).map(w=>`<option value="${esc(w.n)}">${esc(wName(w,false))}</option>`).join("")+`</optgroup>`).join("");$("sec").value=S.sec}
+function fillRig(){
+  $("char").innerHTML=`<option value="">Any scav</option>`+Object.keys(CHARS).map(c=>`<option>${esc(c)}</option>`).join("");$("char").value=S.char||"";
+  const C=CHARS[S.char];
+  $("rig").innerHTML=RIGS.map(r=>{const k=C&&C.rsk?C.rsk.indexOf(r.n):-1,ok=!C||C.rigs.includes(r.n)||k>=0;
+    return `<option value="${esc(r.n)}"${ok?"":" disabled"}>${esc(r.n)}${!ok?" · not for "+esc(S.char):k>=0?" · Rig Skill, "+(presFor(SKC[k])>1?"prestige "+presFor(SKC[k])+"+":fmt(SKC[k])+" XP"):""}</option>`}).join("");
+  if(C&&!C.rigs.includes(S.rig)&&!(C.rsk||[]).includes(S.rig))S.rig=C.rigs.includes("Standard")?"Standard":C.rigs[0];
+  $("rig").value=S.rig}
+function fillGoal(){
+  const g=$("goal");let h=`<option value="__none">No goal</option>`;
+  if(ledgerGoal)h+=`<option value="__ledger">From Stash Ledger: ${esc(goalName(ledgerGoal))}</option>`;
+  if(GD){GD.groups.forEach(([name,ups])=>{const o=ups.filter(u=>!done[u]&&goalItems("u:"+u).length).map(u=>`<option value="u:${esc(u)}">${esc(u)}</option>`).join("");if(o)h+=`<optgroup label="${esc(name)}">${o}</optgroup>`});
+    let i=0;const qs=Object.keys(LINES).map(l=>{const val=LINES[l].length>1?"l:"+l:"q:"+LINES[l][0];if(!goalItems(val).length)return"";i++;return `<option value="${esc(val)}">${sf?"Story goal "+i:esc(l)}</option>`}).join("");
+    if(qs)h+=`<optgroup label="Story quests">${qs}</optgroup>`}
+  g.innerHTML=h;
+  const v=S.goal===null?(ledgerGoal?"__ledger":"__none"):S.goal===""?"__none":S.goal;
+  g.value=[...g.options].some(o=>o.value===v)?v:"__none"}
+
+/* ---------- render ---------- */
+function render(){
+  document.documentElement.dataset.mode=mode;document.documentElement.dataset.cb=cb?"1":"0";
+  $("m-rookie").setAttribute("aria-pressed",mode==="rookie");$("m-vet").setAttribute("aria-pressed",mode==="vet");
+  $("sfbtn").setAttribute("aria-pressed",sf);$("sfstate").textContent=sf?"[ ON ]":"[ OFF ]";
+  $("cbbtn").setAttribute("aria-pressed",cb);$("cbstate").textContent=cb?"[ ON ]":"[ OFF ]";
+  document.querySelectorAll("#via button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.via));
+  document.querySelectorAll("#style button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.v===S.style));
+
+  /* route */
+  const tg=RBY[S.target]||REG[0],ti=tg.t;
+  $("viatunf").hidden=S.via!=="tunnel";
+  $("viatun").innerHTML=TIERS.slice(0,ti+1).map((t,i)=>`<option value="${i}">Tunnel ${t}</option>`).join("");
+  $("viatun").value=String(Math.min(S.viatun,ti));
+  const legs=route();
+  const midTiers=[...new Set(legs.filter(l=>l.k==="reg"&&!l.tgt).map(l=>l.r.t))];
+  $("mids").innerHTML=midTiers.map(k=>`<div class="field"><label for="mid${k}">Region on the way (Tunnel ${TIERS[k]} to ${TIERS[k+1]})</label><select id="mid${k}" data-k="${k}">`+REG.filter(r=>r.t===k).map(r=>`<option value="${esc(r.n)}"${legs.some(l=>l.r===r)?" selected":""}>${esc(regName(r.n,false))}</option>`).join("")+`</select></div>`).join("");
+  $("chain").innerHTML=legs.map((l,i)=>(i?`<span class="arrow" aria-hidden="true">→</span>`:"")+(l.k==="tun"?`<span class="leg tun"><b>Tunnel ${TIERS[l.t]}</b><small>~${legFights(l)} fight${legFights(l)===1?"":"s"}</small></span>`:`<span class="leg${l.tgt?" tgt":""}"><b>${regName(l.r.n)}</b><small>${DIFF[l.r.d]}${U("Difficulty is player opinion, not from the wiki.")} · ~${legFights(l)} fights</small></span>`)).join("");
+  const nT=legs.filter(l=>l.k==="tun").length,nR=legs.filter(l=>l.k==="reg").length;
+  $("routesum").textContent=`${legs.length} leg${legs.length>1?"s":""}`;
+  $("viawhy").innerHTML=S.via==="walk"?"Walking through the tunnels costs no water, and tunnels are free to fast travel to once visited. Each region you reach gets unlocked for fast travel later.":S.via==="tunnel"?"Fast travel to any tunnel you've reached is free, then you walk the rest.":tg.free?"Fast travel to Scorched Enclave and Ashen Mesa is free once you've been there.":`Fast travel straight to ${regName(tg.n)} takes a Fast Travel Drone and about ${WATER[tg.n]} water (in-game map, Oct 2026; it shifts a little day to day). You need to have reached it through the tunnels once. Bunco's garage can drive you there for credits instead${U("Whether a garage trip also uses water is still being tested.")}. The garage is an Innards upgrade: building it needs 32 days of water in your tank and 2,500,000 credits.`;
+  $("reachf").hidden=!sf;
+  $("reached").innerHTML=REG.filter(r=>r.t>0).map(r=>{const on=S.reached.includes(r.n);return `<button type="button" class="chip" data-r="${esc(r.n)}" aria-pressed="${on}">${on?esc(r.n):"▒▒▒▒▒▒"}<i>${TIERS[r.t]}</i></button>`}).join("");
+
+  /* weapons */
+  const w=WBY[S.prim]||WBY.M4A1;
+  if(!w.ammo.includes(S.pammo))S.pammo=w.ammo[0];
+  $("pammo").innerHTML=w.ammo.map(a=>`<option value="${a}">${esc(AMMO[a][0])} · ${AMMO[a][2]??"2?"} CU/round</option>`).join("");$("pammo").value=S.pammo;
+  const B=build(w),mag=B.mag;
+  const reqSlots=new Set(Object.values(B.needs).flat().map(r=>PD.p[r][1]));
+  const show=SLOTORD.filter(k=>B.by[k]&&(mode==="vet"||k==="MAG"||k==="MZL"||k==="RAIL"||reqSlots.has(k)||(k==="BRL"&&B.by.BRL.some(p=>p.sup))));
+  const nm=r=>esc(PD.p[r][0]);
+  $("parts").innerHTML=`<div class="ph"><b>Parts on this gun</b><span>${mode==="vet"?"all slots":"magazine, muzzle and rail; switch to Veteran for every slot"}</span></div>`+
+    (B.by.MAG?"":`<div class="field"><span class="flabel">Magazine</span><span class="fixed">${baseMag(w)} rounds, no other magazines</span></div>`)+
+    (lastChg&&lastChg.w===w.n?`<div class="chg">${lastChg.h}</div>`:"")+
+    show.map(k=>{const opts=B.by[k];const noneTxt=k==="MAG"?`Stock magazine · ${baseMag(w)} rds`:"None";
+      const hasStock=k!=="MAG"||!opts.some(p=>p.cap===baseMag(w));
+      return `<div class="field"><label for="pt-${k}">${SLOTN[k]}</label><select id="pt-${k}" data-s="${k}">${hasStock?`<option value="-1">${noneTxt}</option>`:""}${opts.map(p=>`<option value="${p.i}">${esc(plabel(p))}</option>`).join("")}</select>${B.needs[k]?`<span class="need">Needs ${B.needs[k].map(nm).join(" or ")}</span>`:""}</div>`}).join("");
+  show.forEach(k=>{$("pt-"+k).value=String(B.out[k])});
+  const cl=isCls(w.n),inCat=W.filter(x=>x.c===w.c),rank=k=>1+inCat.filter(x=>x[k]>w[k]).length;
+  const am=AMMO[S.pammo];
+  const fmName={S:"Semi",B:"Burst",A:"Auto"};
+  $("wcard").innerHTML=`<div class="wn"><b>${wName(w)}</b><span>${CAT[w.c][0]}${w.buy?` · ${cl?spl(fmt(w.buy)+" cr"):fmt(w.buy)+" cr"}`:" · not sold"}</span></div>
+  <dl class="stats">
+    <div><dt>Damage</dt><dd>${cl?spl(fmt(w.dmg)):fmt(w.dmg)} <small>#${rank("dmg")} of ${inCat.length}</small></dd></div>
+    <div><dt>DPS</dt><dd>${cl?spl(fmt(w.dps)):fmt(w.dps)} <small>#${rank("dps")} of ${inCat.length}</small></dd></div>
+    <div><dt>Headshot</dt><dd>×${am[3]} <small>from ammo</small></dd></div>
+    <div><dt>Fire modes</dt><dd>${[...w.fm].map(c=>fmName[c]).join(" · ")}</dd></div>
+    <div><dt>Rate of fire</dt><dd>${w.rof}/s</dd></div>
+    <div><dt>Your mag</dt><dd>${mag} ${dl(mag-baseMag(w))}${mag>baseMag(w)?` <small class="dn">slower reload</small>`:mag<baseMag(w)?` <small class="up">faster reload</small>`:""}<small> max ${Math.max(w.mag,...(B.by.MAG||[]).map(p=>p.cap))}</small></dd></div>
+    <div><dt>Suppressed</dt><dd>${B.sup?`<span class="up">Yes ▲</span>`:(B.by.MZL||[]).some(p=>p.sup)||(B.by.BRL||[]).some(p=>p.sup)?"No <small>can be</small>":"No <small>can't be</small>"}</dd></div>
+    <div><dt>Accuracy</dt><dd>${(w.acc+B.acc).toFixed(B.acc?3:2)} ${dl(B.acc,3)}${B.acc?U("Part values are datamined by the wiki and may be from before the July 2026 weapon overhaul."):""}</dd></div>${B.rof?`<div><dt>Fire rate</dt><dd>${dl(B.rof,2)}<small> part value</small></dd></div>`:""}
+    <div><dt>Light</dt><dd>${B.light?"Flashlight <small>glares in fog</small>":"No"}</dd></div>
+  </dl>
+  <div class="att"><span><b>About parts.</b> Part numbers are datamined from the game files by the wiki. Accuracy and magazine size are what the wiki's data shows, so recoil and stability are left out. Since the July 2026 update, bigger magazines also reload slower. "lvl" is the weapon level a vendor needs before selling the part. Some built-in attachments (underbarrel launchers, bipods, bayonets) don't work yet.</span><span class="rk">Levelling a weapon by using it makes it noticeably more accurate, usually around level 20 to 30.</span>${AMMO_UNSURE[S.pammo]?`<span>${U(AMMO_UNSURE[S.pammo])} ${esc(AMMO_UNSURE[S.pammo])}</span>`:""}</div>`;
+
+  /* rig */
+  const rig=RIGS.find(r=>r.n===S.rig)||RIGS[0];
+  const C=CHARS[S.char];
+  const up=(S.mods[rig.n]||"").padEnd(rig.mods.length,"0").slice(0,rig.mods.length);
+  const carryMax=C?C.carry:0,carryPct=Math.min(carryMax,+S.carry[S.char]||0);
+  const skO=(max,txt)=>Array.from({length:max/5+1},(_,i)=>`<option value="${i*5}">${i?`+${i*5}% ${txt} · v${i}, ${presFor(SKC[i-1])>1?"prestige "+presFor(SKC[i-1])+"+":fmt(SKC[i-1])+" XP"}`:"Not learned"}</option>`).join("");
+  $("carryf").hidden=!carryMax;$("medf").hidden=!(C&&C.med);$("skillrow").hidden=!C;
+  $("pres").innerHTML=Array.from({length:50},(_,i)=>`<option value="${i+1}">${i+1} / 50</option>`).join("");$("pres").value=String(presOf());$("pq").value=String(+S.pq||0);
+  $("carry").innerHTML=skO(carryMax,"space and weight");$("carry").value=String(carryPct);
+  $("medsk").innerHTML=skO(25,"healing");$("medsk").value=String(S.medsk||0);
+  const healBonus=C&&C.med?(+S.medsk||0)/100:0;
+  const HP=C?hpOf(C):0;
+  // Carry Capacity bug (player reports on the official Discord, Aug–Oct 2026): the bonus shows in the Stash but not in the Ready Room or in raids. Flip to false once it's fixed.
+  const CARRY_BUG=true;const mult=1+(CARRY_BUG?0:carryPct)/100;
+  $("carryhint").innerHTML=carryPct&&CARRY_BUG?`<span class="dn">Not counted: bugged right now.</span> The bonus shows in the Stash but not in the Ready Room or in raids (player reports, Aug–Oct 2026).`:"";
+  const capRaw=[...rig.mods].reduce((a,m,i)=>a+MODS[m][up[i]==="1"?1:0],0),kgRaw=[...rig.mods].reduce((a,m,i)=>a+MODS[m][up[i]==="1"?3:2],0);
+  const cap=Math.round(capRaw*mult),kgCap=Math.round(kgRaw*mult*10)/10;
+  $("mods").innerHTML=[...rig.mods].map((m,i)=>`<button type="button" class="mod" data-i="${i}" aria-pressed="${up[i]==="1"}" aria-label="${m} module ${i+1}, ${up[i]==="1"?"high quality":"low quality"}" title="${POSN[rig.pos[i]]}: ${up[i]==="1"?"high quality, "+fmt(MODS[m][5])+" cr, needs LL"+hiLL(m,rig.pos[i]):"low quality, "+fmt(MODS[m][4])+" cr"} at Bundleton"><b>${m}${up[i]==="1"?" ▲":""}</b><small>${POSN[rig.pos[i]]}</small>${fmt(MODS[m][up[i]==="1"?1:0])} CU · ${MODS[m][up[i]==="1"?3:2]} kg</button>`).join("")+(rig.mods.length>1?`<button type="button" class="modall" data-all="${up.includes("0")?"1":"0"}">${up.includes("0")?"Upgrade all":"Reset all"}</button>`:"");
+  $("modhint").textContent=`Tap a module to switch between low and high quality. Total ${fmt(cap)} CU · ${kgCap} kg${carryPct&&!CARRY_BUG?` (incl. +${carryPct}% carry skill)`:""}. Your guns don't count toward the weight.`;
+  $("righint").textContent=`${rig.eq} large item bin${rig.eq===1?"":"s"} (equipment or large loot)${rig.wb?` · ${rig.wb} looted-weapon bin${rig.wb>1?"s":""}`:""}${rig.price?` · ${fmt(rig.price)} cr at Trusted, sold from LL${rig.ll}`:" · default rig"}`;
+  $("charhint").innerHTML=C?`${fmt(HP)} HP${+S.pq?U("Personal Quarters bonus is from the wiki. The buff is gone for 24, 12 or 6 hours after you die."):""} · ${esc(C.note)}`:"Pick one to check rigs, weapons and carry bonuses.";
+  const gw=[];if(C)[[w,"main"],[S.sec?WBY[S.sec]:null,"second"]].forEach(([x,role])=>{if(!x||C.guns.includes(x.c))return;
+    gw.push((C.gsk||"").includes(x.c)?`<div class="warn"><b>${esc(S.char)} needs ${CAT[x.c][1]} training first.</b> Your ${role} weapon is ${an(CAT[x.c][1])}: learn the training skill (2,000 XP) in the Character menu.</div>`:`<div class="warn"><b>${esc(S.char)} can't use ${CAT[x.c][0].toLowerCase()}.</b> Your ${role} weapon is ${an(CAT[x.c][1])}, and this scav isn't trained for it. Pick another weapon or scav.</div>`)});
+  $("gunwarn").innerHTML=gw.join("");
+
+  /* ammo math */
+  const mul=STYLE[S.style];
+  const raw=legs.reduce((s,l)=>s+legFights(l),0),fights=raw*mul,total=fights+1;
+  const per=rpf(w),cu1=am[2]??2;
+  const step=mag<=30?mag:10;
+  const floor=Math.min(3*mag,300);
+  let rounds=Math.max(floor,Math.ceil(total*per/step)*step);
+  const sec=S.sec?WBY[S.sec]:null;
+  const SB=sec?build(Object.assign({},sec,{n:sec.n})):null;
+  let smag=sec?baseMag(sec):0,secMagIdx=-1;
+  $("secmagf").hidden=!(sec&&SB.by.MAG);
+  if(sec&&SB.by.MAG){const opts=SB.by.MAG,cur=S.smag[sec.n];const def=(opts.find(p=>p.cap===baseMag(sec))||{}).i;
+    $("secmag").innerHTML=(opts.some(p=>p.cap===baseMag(sec))?"":`<option value="-1">Stock magazine · ${baseMag(sec)} rds</option>`)+opts.map(p=>`<option value="${p.i}">${esc(plabel(p))}</option>`).join("");
+    const v=cur!=null&&opts.some(p=>p.i===cur)?cur:def!=null?def:-1;$("secmag").value=String(v);secMagIdx=v;smag=v>=0?PT(v).cap:baseMag(sec)}
+  const secGL=sec&&sec.c==="GRL";
+  const secRounds=!sec?0:secGL?Math.max(4,2*nR):Math.max(2*smag,Math.min(3*smag,60));
+  const regF=legs.filter(l=>l.k==="reg").reduce((s,l)=>s+legFights(l),0)*mul;
+  const hard=legs.some(l=>l.k==="reg"&&l.r.d>=3);
+  const adv=Math.min(3,1+(regF>=8?1:0)+(hard?1:0)),small=2,food=Math.min(2,nR);
+  const pack=[];
+  pack.push({n:`${am[0]}`,sub:`${wName(w)} · ${(rounds/mag).toFixed(rounds%mag?1:0)} mags of ${mag}`,q:rounds,cu:rounds*cu1,kg:rounds*(am[1]??.02),est:1});
+  if(sec)pack.push({n:AMMO[sec.ammo[0]][0],sub:`${wName(sec)} · ${secGL?"about 2 per region":(secRounds/smag).toFixed(secRounds%smag?1:0)+" mags of "+smag}`,q:secRounds,cu:secRounds*AMMO[sec.ammo[0]][2],kg:secRounds*(AMMO[sec.ammo[0]][1]??.02),est:1});
+  const M=Object.assign({main:"Advanced First Aid Kit",backup:"Small First Aid Kit",food:"Energy Bar"},S.meds);
+  const healAs=(name,q0,from)=>Math.max(1,Math.ceil(q0*HEAL[from][0]/(HEAL[name][0]*(1+healBonus))-1e-9));
+  const mq=healAs(M.main,adv,"Advanced First Aid Kit"),bq=healAs(M.backup,small,"Small First Aid Kit");
+  if(C&&C.noheal)pack.push({n:"No heal items",sub:"Gunhead can't heal or eat (checked in-game), so meds and food are left out. Spend the space on ammo or loot",q:0,cu:0,kg:0,flag:1,note:1});
+  else{pack.push({n:M.main,swap:"main",sub:`heals ${Math.round(HEAL[M.main][0]*(1+healBonus))} HP each · `+(M.main==="Advanced First Aid Kit"?"what most players carry":`same healing as ${adv} Advanced kit${adv>1?"s":""}`),q:mq,cu:mq*HEAL[M.main][1],kg:mq*KG[M.main],est:1});
+  pack.push({n:M.backup,swap:"backup",sub:`heals ${Math.round(HEAL[M.backup][0]*(1+healBonus))} HP each · backup`+(M.backup==="Small First Aid Kit"?", cheap":""),q:bq,cu:bq*HEAL[M.backup][1],kg:bq*KG[M.backup],est:1});
+  if(food)pack.push({n:M.food,swap:"food",sub:M.food==="Canteen"?"heals 80 HP · or eat food you loot on the way":"or eat food you loot on the way",q:food,cu:food*FOOD[M.food],kg:food*KG[M.food],est:1});}
+  if(tg.drill&&legs.some(l=>l.tgt))pack.push({n:"Deployable Drill",sub:"only for the Subway extract",q:1,cu:50,kg:1,flag:1});
+  const gq=Math.max(1,+S.grenq||2);$("grenqf").hidden=!S.gren;$("gren").value=S.gren||"";$("grenq").innerHTML=[1,2,3,4,5,6].map(v=>`<option>${v}</option>`).join("");$("grenq").value=String(gq);
+  if(S.gren&&GREN[S.gren])pack.push({n:S.gren,sub:S.gren==="Frag"?"":"not sold by vendors: loot or craft",q:gq,cu:gq*GREN[S.gren][0],kg:gq*GREN[S.gren][1]});
+  const needLight=legs.some(l=>l.k==="reg"&&l.r.dark);
+  if(needLight&&!B.light)pack.push({n:"Rig Light",sub:"this region is dark; one often lies near the entrance, and the wiki also suggests a Tactical Camera",q:1,cu:0,kg:0,flag:1,eq:1,slot:"large item bin"});
+  const packed=pack.reduce((s,p)=>s+p.cu,0),packedKg=Math.round(pack.reduce((s,p)=>s+(p.kg||0),0)*10)/10;
+  const eqUsed=pack.filter(p=>p.eq).length;
+  const swapSel=p=>{const opts=p.swap==="food"?Object.keys(FOOD):Object.keys(HEAL);return `<select class="swap" id="sw-${p.swap}" data-sw="${p.swap}" aria-label="Swap ${p.swap==="food"?"food":"heal item"}">${opts.map(o=>`<option${o===p.n?" selected":""}>${esc(o)}</option>`).join("")}</select>`};
+  $("pack").innerHTML=pack.map(p=>`<li class="${p.flag?"flag":""}"><span class="nm">${p.swap?swapSel(p):p.n.startsWith("<")?p.n:esc(p.n)}<small>${p.sub}</small></span><span class="q">${p.note?"":fmt(p.q)}</span><span class="cu">${p.note?"":p.eq?(p.slot||"rig slot"):fmt(p.cu)+" CU"+(p.kg?" · "+(Math.round(p.kg*10)/10)+" kg":"")}${p.est?U("Count is our estimate."):""}</span></li>`).join("");
+  $("math").innerHTML=`<span><code>${raw}</code> fights on the route${U("Fights per leg are our guess: tunnel 2 (enemies respawn there), easy region 2, medium 3, hard 4, very hard 5, +1 per region at night.")} × <code>${mul}</code> for ${S.style} = <code>${+fights.toFixed(1)}</code>, plus <code>1</code> spare fight</span>
+  <span>× <code>${per}</code> rounds per fight for a ${CAT[w.c][1]}${w.fm.includes("A")&&["RFL","SHG","HRF"].includes(w.c)?" with auto":""}${U("Rounds per fight is our guess per weapon type.")} = <code>${fmt(Math.ceil(total*per))}</code>, rounded up to <code>${fmt(rounds)}</code></span>
+  <span>Never less than 3 mags (max 300 rounds): the rule of thumb players give most${rounds===floor&&floor>Math.ceil(total*per)?", and it applies here":""}</span>
+  <span>${fmt(rounds)} × ${cu1} CU = <code>${fmt(rounds*cu1)} CU</code>${AMMO_UNSURE[S.pammo]?U(AMMO_UNSURE[S.pammo]):""}</span>`;
+
+  /* route notes */
+  const tips=[];
+  if(tg.drill)tips.push(`${regName("Downtown Lost Angels")}: the Subway extract needs a Drill. The other extracts don't.`);
+  if(tg.dead)tips.push(`${regName("Babel")} only has an extract back to the Innards, so the run ends there.`);
+  if(ti===3&&S.via!=="direct")tips.push("Past Tunnel D there's no way back into the tunnels. Plan to extract from your target.");
+  const nsd=legs.filter(l=>l.k==="reg"&&l.r.nsd).map(l=>regName(l.r.n));
+  tips.push(`Night Shift is random: you only see it once you're in, and players say it's now about 1 run in 3.${nsd.length?` It's darkest on ${nsd.length>1?nsd.slice(0,-1).join(", ")+" and "+nsd.at(-1):nsd[0]}.`:""}<span class="rk"> Options players use:</span>
+    <ul class="tips rk" style="margin-top:6px">
+      <li><b>Rig light:</b> switch it on and off with Q, wide beam, works whatever gun you hold. One usually lies near the spawn on Night Shift, so most players don't bring their own. Uses a large item bin.</li>
+      <li><b>Gun flashlight:</b> fits about 30 guns, often only with a certain handguard. It can't be switched off, and the wiki still advises against it in fog.${B.light?" You have one fitted.":B.canLight?" Your gun can take one.":""}</li>
+      <li><b>Tactical Camera:</b> not night vision, but shows enemies and containers through walls within 30 m (50 m as Shaman). Grabbers show up black.</li>
+      <li><b>No light:</b> some players get through by staying unseen, often with a shotgun for close calls.</li>
+    </ul>`);  if(legs.some(l=>l.k==="reg"&&l.r.dark))tips.push(`${regName("Underground Cemetery")}: a Grabber there kills any scav under 2000 HP in one grab. The wiki suggests a Tactical Camera, Pneumatic Jump and Cryo ammo.`);
+  if(S.via==="direct"&&!tg.free)tips.push(`Direct travel: bring a Fast Travel Drone and about ${WATER[tg.n]} water, or use Bunco's garage.`);
+  if(C&&HP<2000)tips.push(`<span class="rk">Your ${esc(S.char)} has ${fmt(HP)} HP. Some enemies, like the Grabber, can execute any scav under 2,000 HP. Prestige and Personal Quarters raise your HP.</span><span class="vk">${esc(S.char)}: ${fmt(HP)} HP, under 2,000, so executions can kill you.</span>`);
+  if(nT)tips.push(`<span class="rk">In a squad, only the lead scav can pick the next exit in a tunnel. The wiki says that if the lead dies in a tunnel, everyone is sent back to the Innards${U("Not checked in-game yet. Players report this may not be true.")}.</span><span class="vk">Squad: only the lead picks tunnel exits. Lead dying sends everyone home, says the wiki${U("Not checked in-game yet.")}.</span>`);
+  tips.push(`<span class="rk">Some entry points need a positive rating with a faction. If one is greyed out, pick another.</span><span class="vk">Some entry points need faction rating.</span>`);
+  $("tips").innerHTML=tips.map(t=>`<li>${t}</li>`).join("");
+
+  /* goal */
+  const g=curGoal(),gi=goalItems(g),H=have[g]||{};
+  let gcu=0,unk=0,large=[];
+  const left=gi.map(x=>({...x,left:Math.max(0,x.need-(H[x.n]||0))})).filter(x=>x.left>0).sort((a,b)=>b.left-a.left);
+  // large items sit in a large item bin: no CU. They list a weight (Explosives 6 kg) but the rig total doesn't go up (checked in-game, Oct 2026), likely a game bug. Flip to false if a patch fixes it.
+  const LARGE_KG_BUG=true;
+  let gkg=0;left.forEach(x=>{if(x.s==="L"){large.push(x);if(!LARGE_KG_BUG)gkg+=x.left*(GKG[x.n]??.5)}else{if(x.s==null){unk++;gcu+=x.left*15}else gcu+=x.left*x.s;gkg+=x.left*(GKG[x.n]??.5)}});gkg=Math.round(gkg*10)/10;
+  $("goalhint").textContent=!GD?"":g&&S.goal===null?"Using your Stash Ledger goal. Pick another here to override it; the ledger isn't changed.":ledgerGoal?"":"Tip: set a goal in the Stash Ledger's raid planner and it shows up here.";
+  $("goalsec").hidden=!g;
+  if(g){$("goalbox").innerHTML=left.length?`<p class="hint" style="margin:0">${sf&&g[0]!=="u"?spl(esc(goalName(g))):esc(goalName(g))} still needs ${left.length} kind${left.length>1?"s":""} of item${have[g]?", after what you have":""}.</p><ul class="pack">`+left.map(x=>`<li><span class="nm">${iName(x.n)}</span><span class="q">${x.left}</span><span class="cu">${x.s==="L"?"large bin":x.s==null?"~"+fmt(x.left*15)+" CU"+U("Size unknown, guessed at 15 CU each."):fmt(x.left*x.s)+" CU"}</span></li>`).join("")+`</ul>${large.length?`<p class="hint" style="margin:0">Large items go in a large item bin and take no CU. Check your rig has a free bin. They list a weight, but right now the game doesn't add it to your rig, which looks like a bug${U("Checked in-game, Oct 2026. A patch may start counting it, so leave some kg spare.")}.</p>`:""}`:!goalKnown(g)?`<p class="empty">This goal isn't in this page's data yet (it may come from a newer Stash Ledger). Pick another one here.</p>`:`<p class="empty">Nothing left to collect for ${sf&&g[0]!=="u"?spl(esc(goalName(g))):esc(goalName(g))}. Ready to build.</p>`}
+
+  /* capacity bar */
+  const free=cap-packed-gcu,over=packed>cap,overKg=packedKg>kgCap,freeKg=Math.round((kgCap-packedKg-gkg)*10)/10;
+  const pct=v=>Math.max(0,Math.min(100,v/cap*100));
+  $("capbar").innerHTML=over?`<i class="ov" style="width:100%"></i>`:`<i class="pk" style="width:${pct(packed)}%"></i><i class="gl" style="width:${pct(Math.min(gcu,cap-packed))}%"></i>`;
+  $("capbar").setAttribute("aria-label",`Packed ${fmt(packed)} CU, goal loot ${fmt(gcu)} CU, of ${fmt(cap)} CU`);
+  const pk=v=>Math.max(0,Math.min(100,v/kgCap*100));
+  $("kgbar").innerHTML=overKg?`<i class="ov" style="width:100%"></i>`:`<i class="pk" style="width:${pk(packedKg)}%"></i><i class="gl" style="width:${pk(Math.min(gkg,kgCap-packedKg))}%"></i>`;
+  $("kgbar").setAttribute("aria-label",`Packed ${packedKg} kg, goal loot ${gkg} kg, of ${kgCap} kg`);
+  $("lgkg").textContent=kgCap;$("bigkg").textContent=Math.max(0,Math.round((kgCap-packedKg)*10)/10);
+  $("lgpk").textContent=fmt(packed);$("lggl").textContent=fmt(gcu)+(unk?"~":"");$("lgfr").textContent=fmt(Math.max(0,free));$("lgcap").textContent=fmt(cap);
+  $("bigammo").textContent=fmt(rounds);$("bigammol").textContent=`rounds of ${am[0]}`;
+  $("bigfree").textContent=fmt(Math.max(0,cap-packed));
+  const warnA=over?`<div class="warn"><b>Over capacity.</b> Your kit is ${fmt(packed-cap)} CU more than this rig holds. Bring less ammo, a smaller round, or a bigger rig.</div>`:free<0?`<div class="warn"><b>Goal loot won't fit.</b> After your kit there's ${fmt(cap-packed)} CU left, but the goal needs about ${fmt(gcu)}. Plan two runs or pack lighter.</div>`:"";
+  const warns=[...gw];if(warnA)warns.push(warnA);
+  if(overKg)warns.push(`<div class="warn"><b>Too heavy.</b> Your kit weighs ${packedKg} kg and this rig carries ${kgCap} kg. You can't go over the limit: bring less, or upgrade a module.</div>`);
+  else if(freeKg<0&&!over)warns.push(`<div class="warn"><b>Goal loot is too heavy.</b> After your kit you can carry ${Math.round((kgCap-packedKg)*10)/10} kg more, but the goal loot weighs about ${gkg} kg.</div>`);
+  const largeN=large.reduce((a,x)=>a+x.left,0);
+  if(eqUsed>rig.eq)warns.push(`<div class="warn"><b>No free large item bin.</b> The ${esc(rig.n)} has ${rig.eq} large item bin${rig.eq===1?"":"s"}, and your equipment needs ${eqUsed}.</div>`);
+  else if(eqUsed+largeN>rig.eq)warns.push(`<div class="warn"><b>Not enough large item bins for the goal.</b> Your equipment uses ${eqUsed} of ${rig.eq}, and the goal needs ${largeN} large item${largeN>1?"s":""}. Plan more runs or a rig with more bins.</div>`);
+  /* per container: every module has its own CU and kg limit (in-game rig screen). Kit goes into as few containers as possible, biggest first, then goal loot. */
+  const conts=[...rig.mods].map((m,i)=>{const hi=up[i]==="1";return{pos:rig.pos[i],m,hi,cu:MODS[m][hi?1:0]*mult,kg:MODS[m][hi?3:2]*mult,ucu:0,ukg:0,kit:[],goal:[]}});
+  const order=conts.map((c,i)=>i).sort((a,b)=>conts[b].kg-conts[a].kg||conts[b].cu-conts[a].cu||a-b);
+  // place q units of `per` items each; returns items that didn't fit
+  const place=(name,q,ucu,ukg,key,per=1)=>{let n=q;for(const i of order){if(!n)break;const c=conts[i];
+    const fit=Math.min(n,ucu>0?Math.floor((c.cu-c.ucu)/(ucu*per)+1e-6):n,ukg>0?Math.floor((c.kg-c.ukg)/(ukg*per)+1e-6):n);
+    if(fit>0){c.ucu+=fit*per*ucu;c.ukg+=fit*per*ukg;const e=c[key].find(z=>z[0]===name);if(e)e[1]+=fit*per;else c[key].push([name,fit*per]);n-=fit}}return n*per};
+  const placeStacks=(x,key)=>{const st=STK[x.n]||1,full=Math.floor(x.q/st),rem=x.q%st;return place(x.n,full,x.ucu,x.ukg,key,st)+(rem?place(x.n,1,x.ucu,x.ukg,key,rem):0)};
+  const kitL=pack.filter(p=>!p.eq&&!p.note&&p.q>0&&(p.cu||p.kg)).map(p=>({n:p.n.replace(/<[^>]+>/g,""),q:p.q,ucu:p.cu/p.q,ukg:(p.kg||0)/p.q})).sort((a,b)=>b.ukg*(STK[b.n]||1)-a.ukg*(STK[a.n]||1));
+  const kitLeft=kitL.map(x=>({...x,left:placeStacks(x,"kit")})).filter(x=>x.left>0);
+  const goalL=left.filter(x=>x.s!=="L").map(x=>({n:x.n,q:x.left,ucu:x.s==null?15:x.s,ukg:GKG[x.n]??.5})).sort((a,b)=>b.ukg-a.ukg);
+  const goalLeft=goalL.map(x=>({...x,left:place(x.n,x.q,x.ucu,x.ukg,"goal")})).filter(x=>x.left>0);
+  const maxKg=Math.max(...conts.map(c=>c.kg)),maxCu=Math.max(...conts.map(c=>c.cu));
+  const kgS=v=>Math.round(v*10)/10;
+  if(!over&&!overKg&&kitLeft.length)warns.push(`<div class="warn"><b>Kit doesn't fit container by container.</b> The rig's total has room, but ${kitLeft.map(x=>`${fmt(x.left)}× ${esc(x.n)}`).join(", ")} won't fit in what's left of any single container. Upgrade a module or bring less.</div>`);
+  const tooBig=goalLeft.filter(x=>x.ukg>maxKg+1e-9||x.ucu>maxCu+1e-9);
+  if(tooBig.length)warns.push(`<div class="warn"><b>Too big for this rig's containers.</b> ${tooBig.map(x=>`${iName(x.n)} (${x.ukg} kg, ${fmt(x.ucu)} CU each)`).join(", ")} won't fit in any one container here (biggest: ${kgS(maxKg)} kg, ${fmt(Math.round(maxCu))} CU). Upgrade a module or use a rig with bigger containers.</div>`);
+  else if(goalLeft.length&&free>=0&&freeKg>=0)warns.push(`<div class="warn"><b>Goal loot doesn't fit container by container.</b> The rig's total has room, but ${goalLeft.map(x=>`${fmt(x.left)}× ${iName(x.n)}`).join(", ")} won't fit in what's left of any single container.</div>`);
+  const sumTxt=a=>a.map(([n,q])=>`${fmt(q)}× ${iName(n)}${STK[n]?` (${Math.ceil(q/STK[n])} stack${Math.ceil(q/STK[n])>1?"s":""})`:""}`).join(", ");
+  const emptyN=conts.filter(c=>!c.kit.length).length;
+  $("layout").innerHTML=`<p class="hint" style="margin:0"><span class="rk">Every container has its own space and weight limit. One way to pack it: kit in as few containers as possible, the rest empty for loot. Ammo goes in whole stacks (the game only splits a stack when you pick ammo up). </span>${emptyN} of ${conts.length} container${conts.length>1?"s":""} free of kit.</p><ul class="pack">`+conts.map(c=>{const pc=Math.round(c.ucu/c.cu*100),pw=Math.round(c.ukg/c.kg*100),pn=POSN[c.pos];
+    return `<li><span class="nm">${pn[0].toUpperCase()+pn.slice(1)} · ${c.m}${c.hi?" ▲":""}<small>${c.kit.length?"Kit: "+sumTxt(c.kit):""}${c.kit.length&&c.goal.length?" · ":""}${c.goal.length?"Goal: "+sumTxt(c.goal):""}${!c.kit.length&&!c.goal.length?"Empty, free for loot":""}</small></span><span class="q">${Math.max(pc,pw)}%</span><span class="cu">${fmt(Math.round(c.ucu))}/${fmt(Math.round(c.cu))} CU · ${kgS(c.ukg)}/${kgS(c.kg)} kg</span></li>`}).join("")+`</ul>`;
+  $("mwarn").innerHTML=warns.join("");
+  $("mroute").innerHTML=legs.map(l=>l.k==="tun"?"Tunnel "+TIERS[l.t]:regName(l.r.n)).join(" → ")+` · ${S.style}${S.night?" · night":""}`;
+  $("mbtxt").textContent=`${fmt(rounds)} RDS · ${fmt(Math.max(0,cap-packed))} CU · ${Math.max(0,Math.round((kgCap-packedKg)*10)/10)} KG`;
+
+  /* where to get it */
+  const items=[];const add=(n,label,note)=>items.push({n,label:label||esc(n),note:note||""});
+  add(w.n,wName(w),"main weapon");B.picked.forEach(p=>add(p.n,null,(SLOTN[p.s]||"part").toLowerCase()+(p.lvl?` · weapon level ${p.lvl}`:"")));
+  add(am[0],null,"ammo");
+  if(sec){add(sec.n,wName(sec),"second weapon");if(secMagIdx>=0)add(PT(secMagIdx).n,null,"magazine");if(AMMO[sec.ammo[0]][0]!==am[0])add(AMMO[sec.ammo[0]][0],null,"ammo")}
+  pack.filter(p=>p.swap||/Drill|Rig Light/.test(p.n)).forEach(p=>add(p.n));
+  const needV={};
+  const rowH=it=>{const v=vendOf(it.n),l=lootOf(it.n).slice(0,2);
+    if(v.length&&!v.some(x=>!VUNLOCK[x.v]&&x.ll===1)){const lo=Math.min(...v.map(x=>x.ll));v.filter(x=>x.ll===lo).forEach(x=>(needV[x.v]=needV[x.v]||[]).push({n:it.label,ll:x.ll}))}
+    const buy=v.length?v.map(x=>`<b>${VN[x.v][0]}</b> LL${x.ll}`).join(" · "):"not sold by vendors";
+    const lt=l.map(x=>x.ty==="U"?`dropped by ${esc(x.n)}`:x.ty==="G"?`${esc(x.n)} (${x.ch}%)`:`${esc(x.n)} ${x.ch}%${x.maps.length?" on "+x.maps.map(m=>RBY[m]?regName(m):esc(m)).join(", "):""}${x.night?" at night":""}`).join("; ");
+    return `<li><span class="gn">${it.label} <small>${it.note}</small></span><span class="gb">Buy: ${buy}</span>${lt?`<span class="gl">Loot: ${lt}</span>`:""}</li>`};
+  const nUp=[...up].filter(x=>x==="1").length;
+  const hiNeed=[...rig.mods].some((m,i)=>up[i]==="1"&&hiLL(m,rig.pos[i])===3);
+  if(rig.ll===3||hiNeed)(needV.D=needV.D||[]).push({n:rig.ll===3?esc(rig.n)+" rig":"High quality modules",ll:3});
+  const rigRow=(rig.n.startsWith("Standard")?"":`<li><span class="gn">${esc(rig.n)} <small>rig</small></span><span class="gb">Buy: <b>Bundleton</b> LL${rig.ll} · ${fmt(rig.price)} cr at Trusted (LL3)</span></li>`)+(nUp?`<li><span class="gn">High quality container module${nUp>1?"s":""} <small>×${nUp}</small></span><span class="gb">Buy: <b>Bundleton</b> ${hiNeed?"LL3":"LL1"} · ${fmt([...rig.mods].reduce((a,m,i)=>a+(up[i]==="1"?MODS[m][5]:0),0))} cr in total at Trusted (LL3)</span></li>`:"")+(S.gren?`<li><span class="gn">${esc(S.gren)} <small>grenade</small></span><span class="gb">Not sold by vendors. Loot it from infantry and ammo crates, or craft it at the Munitions Printer.</span></li>`:"");
+  const list=items.map(rowH).join("")+rigRow;
+  const reps=Object.entries(needV).map(([k,arr])=>{const top=Math.max(...arr.map(a=>a.ll));const f=VN[k][1];
+    const forTxt=arr.map(a=>`${a.n} (LL${a.ll})`).join(", ");
+    return `<div class="rep"><b>${VN[k][0]}</b> · ${f} reputation${VUNLOCK[k]?` · unlocks ${sf&&k!=="D"?spl(VUNLOCK[k]):VUNLOCK[k]}`:""}${forTxt?`<br>Only way to buy: ${forTxt}`:""}</div>`}).join("");
+  $("getbox").innerHTML=`<ul class="gets">${list}</ul>`+(reps?`<div class="reps"><h3>Reputation</h3>${reps}<p class="hint" style="margin:0">Reputation goes up when you turn in quests and when you kill units of other factions. It goes down when you hurt that faction's own units. Killing Water Thieves, cultists or rogue AI raises it with every major faction, so they're the safe targets: Water Thieves hang around ${regName("Frozen Swamp")}, and cultists show up in the tunnels. Higher loyalty also makes buying cheaper: LL1 pays 125%, LL2 100%, LL3 75% (Bunco keeps its prices).</p></div>`:"")+`<p class="hint" style="margin:0">LL = the vendor's loyalty level. Loot chances are per container, from the wiki's loot tables. Since February 2026, ammo, meds and rig equipment can also be crafted in the Innards.</p>`;
+
+  /* before you drop */
+  const pkd=pack.filter(p=>!p.note);const drops=[...pkd.map(p=>`${fmt(p.q)} × ${p.n.replace(/<[^>]+>/g,"")}`),...(S.via==="direct"&&!tg.free?[`Fast Travel Drone and about ${WATER[tg.n]} water (or Bunco's garage)`]:[]),"Rig modules and weapons are fine to risk: they stay in your gravestone if you die.","Everything else you carry drops when you die."];
+  $("drop").innerHTML=drops.map((d,i)=>i<pkd.length?`<label class="check" for="d${i}"><input type="checkbox" id="d${i}"><span>${esc(d)}</span></label>`:`<p class="hint" style="margin:4px 0 0">${esc(d)}</p>`).join("");
+  saveS();
+}
+
+/* ---------- events ---------- */
+function rebuild(){fillTarget();fillGuns();fillRig();fillGoal();render()}
+$("target").addEventListener("change",e=>{S.target=e.target.value;render()});
+$("via").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.via=b.dataset.v;render()});
+$("viatun").addEventListener("change",e=>{S.viatun=+e.target.value;render()});
+$("mids").addEventListener("change",e=>{const k=e.target.dataset.k;if(k!=null){S.mids[k]=e.target.value;render()}});
+$("prim").addEventListener("change",e=>{S.prim=e.target.value;lastChg=null;render()});
+$("pammo").addEventListener("change",e=>{S.pammo=e.target.value;render()});
+$("parts").addEventListener("change",e=>{const k=e.target.dataset.s;if(!k)return;const w=WBY[S.prim];const A=build(w);S.parts[w.n]=Object.assign({},A.out,{[k]:+e.target.value});lastChg={w:w.n,h:diffHTML(w,A,build(w),k)};render()});
+$("secmag").addEventListener("change",e=>{if(S.sec){S.smag[S.sec]=+e.target.value;render()}});
+$("sec").addEventListener("change",e=>{S.sec=e.target.value;render()});
+$("rig").addEventListener("change",e=>{S.rig=e.target.value;render()});
+$("char").addEventListener("change",e=>{S.char=e.target.value;const C=CHARS[S.char],sw=S.sec&&WBY[S.sec];if(C&&sw&&!C.guns.includes(sw.c)&&!(C.gsk||"").includes(sw.c)){S.sec="";$("sec").value=""}fillRig();render()});
+$("carry").addEventListener("change",e=>{S.carry=Object.assign({},S.carry,{[S.char]:+e.target.value});render()});
+$("medsk").addEventListener("change",e=>{S.medsk=+e.target.value;render()});
+$("pres").addEventListener("change",e=>{S.pres=Object.assign({},S.pres,{[S.char]:+e.target.value});fillRig();render()});
+$("pq").addEventListener("change",e=>{S.pq=+e.target.value;render()});
+$("mods").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const rig=RIGS.find(r=>r.n===S.rig)||RIGS[0];let up=(S.mods[rig.n]||"").padEnd(rig.mods.length,"0").slice(0,rig.mods.length);
+  if(b.dataset.all!=null)up=b.dataset.all.repeat(rig.mods.length);else{const i=+b.dataset.i;up=up.slice(0,i)+(up[i]==="1"?"0":"1")+up.slice(i+1)}
+  S.mods=Object.assign({},S.mods,{[rig.n]:up});render()});
+$("gren").addEventListener("change",e=>{S.gren=e.target.value;render()});
+$("grenq").addEventListener("change",e=>{S.grenq=+e.target.value;render()});
+$("pack").addEventListener("change",e=>{const k=e.target.dataset&&e.target.dataset.sw;if(!k)return;S.meds=Object.assign({},S.meds,{[k]:e.target.value});render()});
+$("style").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;S.style=b.dataset.v;render()});
+$("goal").addEventListener("change",e=>{const v=e.target.value;S.goal=v==="__ledger"?null:v==="__none"?"":v;render()});
+$("reached").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;const n=b.dataset.r;S.reached=S.reached.includes(n)?S.reached.filter(x=>x!==n):[...S.reached,n];rebuild()});
+$("sfbtn").addEventListener("click",()=>{sf=!sf;LS("tfw-lo-sf",sf?"1":"0");rebuild()});
+$("cbbtn").addEventListener("click",()=>{cb=!cb;LS("tfw-lo-cb",cb?"1":"0");render()});
+$("m-rookie").addEventListener("click",()=>{mode="rookie";LS("tfw-lo-mode",mode);render()});
+$("getsec").addEventListener("toggle",e=>LS("tfw-lo-getopen",e.target.open?"1":"0"));
+if(LS("tfw-lo-getopen")==="1")$("getsec").open=true;
+$("m-vet").addEventListener("click",()=>{mode="vet";LS("tfw-lo-mode",mode);render()});
+document.addEventListener("click",e=>{
+  const s=e.target.closest(".spoil");if(s){if(!s.classList.contains("shown"))reveal(s);return}
+  const t=e.target.closest(".term");if(!t)return;
+  const box=t.closest(".step").querySelector(".defbox"),open=t.getAttribute("aria-expanded")==="true";
+  t.closest(".step").querySelectorAll(".term").forEach(x=>x.setAttribute("aria-expanded","false"));
+  if(open){box.hidden=true;return}
+  const g=GLOSS[t.dataset.t];box.innerHTML=`<b>${esc(g[0])}</b>${esc(g[1])}`;box.hidden=false;t.setAttribute("aria-expanded","true")});
+document.addEventListener("keydown",e=>{if((e.key==="Enter"||e.key===" ")&&e.target.classList&&e.target.classList.contains("spoil")&&!e.target.classList.contains("shown")){e.preventDefault();reveal(e.target)}});
+if(!WBY[S.prim])S.prim="M4A1";if(!RBY[S.target])S.target="Scorched Enclave";clean();
+if(sharedPrev)$("loaded").hidden=false;
+window.addEventListener("hashchange",()=>{if(/^#lo=/.test(location.hash))location.reload()});
+$("undoshare").addEventListener("click",()=>{try{S=Object.assign({},DEF,JSON.parse(sharedPrev))}catch(e){}clean();$("loaded").hidden=true;rebuild()});
+$("sharebtn").addEventListener("click",async()=>{const url=location.origin+location.pathname+"#lo="+b64e(JSON.stringify(shareState()));
+  const inp=$("shareurl");inp.value=url;let ok=false;try{await navigator.clipboard.writeText(url);ok=true}catch(e){}
+  inp.hidden=ok;$("sharemsg").textContent=ok?"Link copied. It holds your route, guns, scav and rig, not your goal.":"Copy this link:";if(!ok){inp.focus();inp.select()}});
+rebuild();
+</script>
+</body>
+</html>
