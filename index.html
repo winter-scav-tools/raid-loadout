@@ -378,7 +378,7 @@ footer b{color:var(--ink)}
 <footer>
   <span><b>?</b> = our estimate, not from the wiki. Ammo and med counts start from what players post (at least 3 mags, Advanced kits) and our guess of fights per region, until players report real numbers. Used more or less on a run? <a href="https://github.com/winter-scav-tools/raid-loadout/issues/new" target="_blank" rel="noopener">Tell us in an issue</a></span>
   <span><b>Unofficial fan-made tool,</b> not affiliated with Fun Dog Studios. Support the devs: <a href="https://store.steampowered.com/app/2828860/The_Forever_Winter/" target="_blank" rel="noopener">Steam</a> · <a href="https://store.epicgames.com/en-US/p/the-forever-winter-8b8280" target="_blank" rel="noopener">Epic Games Store</a> · <a href="https://www.fundogstudios.com/" target="_blank" rel="noopener">fundogstudios.com</a></span>
-  <span>Raid Loadout v1.01 · <b>Made by scavs, for scavs,</b> part of <a href="https://github.com/winter-scav-tools" target="_blank" rel="noopener">Winter Scav Tools</a> · Built with help from Claude (AI), no AI art · Data from <a href="https://theforeverwinter.wiki.gg/" target="_blank" rel="noopener">The Forever Winter Wiki</a> under <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, checked 28 Oct 2026</span>
+  <span>Raid Loadout v1.02 · <b>Made by scavs, for scavs,</b> part of <a href="https://github.com/winter-scav-tools" target="_blank" rel="noopener">Winter Scav Tools</a> · Built with help from Claude (AI), no AI art · Data from <a href="https://theforeverwinter.wiki.gg/" target="_blank" rel="noopener">The Forever Winter Wiki</a> under <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, checked 28 Oct 2026</span>
   <details class="fnotes"><summary>How to read this page</summary>
     <span>Weapon stats, weapon parts, ammo sizes, rig sizes and med kits come from the wiki. Region difficulty comes from player opinions and is marked ?.</span>
     <span>The in-game weapon stat card is often wrong. The wiki says only accuracy and magazine size visibly change how a gun performs, so that's what we show.</span>
@@ -556,7 +556,7 @@ function clean(){
   if(!own(RBY,S.target))S.target="Scorched Enclave";
   if(!RIGS.some(r=>r.n===S.rig))S.rig="Standard";
   if(S.char!==""&&!own(CHARS,S.char))S.char="";
-  if(S.sec!==""&&!(own(WBY,S.sec)&&["PST","GRL"].includes(WBY[S.sec].c)))S.sec="";
+  if(S.sec!==""&&!own(WBY,S.sec))S.sec="";
   if(!own(STYLE,S.style))S.style="normal";
   if(!["walk","tunnel","direct"].includes(S.via))S.via="walk";
   if(!intIn(S.viatun,0,3))S.viatun=1;
@@ -607,7 +607,7 @@ const reveal=el=>{revealed.add(el.innerHTML);el.classList.add("shown");["role","
 // region names aren't spoilers: the in-game map shows every region from the start
 const regName=(n,html=true)=>html?esc(n):n;
 const isCls=n=>sf&&CLASSIFIED.has(n);
-const SPOIL_ITEM=/rail ?gun|AT-43/i;
+const SPOIL_ITEM=/rail ?gun|AT-43|\.50 PST/i;
 const iName=n=>sf&&SPOIL_ITEM.test(n)?spl(esc(n)):esc(n);
 const wName=(w,html=true)=>isCls(w.n)?(html?spl(esc(w.n)):`[classified ${CAT[w.c][1]}]`):(html?esc(w.n):w.n);
 
@@ -646,7 +646,7 @@ const gunOpt=w=>{const C=CHARS[S.char],ok=gunOk(w.c),tr=C&&ok&&!C.guns.includes(
 function fillGuns(){
   const groups=Object.keys(CAT).map(c=>{const ws=W.filter(w=>w.c===c);return ws.length?`<optgroup label="${CAT[c][0]}">`+ws.map(gunOpt).join("")+`</optgroup>`:""}).join("");
   $("prim").innerHTML=groups;$("prim").value=S.prim;
-  $("sec").innerHTML=`<option value="">None</option>`+["PST","GRL"].map(c=>`<optgroup label="${CAT[c][0]}">`+W.filter(w=>w.c===c).map(gunOpt).join("")+`</optgroup>`).join("");$("sec").value=S.sec}
+  $("sec").innerHTML=`<option value="">None</option>`+groups;$("sec").value=S.sec}
 function fillRig(){
   $("char").innerHTML=`<option value="">Any scav</option>`+Object.keys(CHARS).map(c=>`<option>${esc(c)}</option>`).join("");$("char").value=S.char||"";
   const C=CHARS[S.char];
@@ -757,8 +757,12 @@ function render(){
   if(sec&&SB.by.MAG){const opts=SB.by.MAG,cur=S.smag[sec.n];const def=(opts.find(p=>p.cap===baseMag(sec))||{}).i;
     $("secmag").innerHTML=(opts.some(p=>p.cap===baseMag(sec))?"":`<option value="-1">Stock magazine · ${baseMag(sec)} rds</option>`)+opts.map(p=>`<option value="${p.i}">${esc(plabel(p))}</option>`).join("");
     const v=cur!=null&&opts.some(p=>p.i===cur)?cur:def!=null?def:-1;$("secmag").value=String(v);secMagIdx=v;smag=v>=0?PT(v).cap:baseMag(sec)}
-  const secGL=sec&&sec.c==="GRL";
-  const secRounds=!sec?0:secGL?Math.max(4,2*nR):Math.max(2*smag,Math.min(3*smag,60));
+  // Any weapon fits the second slot (checked in-game). Pistol: a backup sidearm. Grenade launcher: about 2 per region.
+  // Anything else is a second main gun that shares the fights: half the main formula, at least 2 mags.
+  const secGL=sec&&sec.c==="GRL",secPST=sec&&sec.c==="PST",secLong=sec&&!secGL&&!secPST;
+  const secAmK=sec?(sec.ammo.includes(S.pammo)?S.pammo:sec.ammo[0]):null,sam=sec?AMMO[secAmK]:null;
+  const secStep=smag<=30?smag:10,secPer=sec?rpf(sec):0;
+  const secRounds=!sec?0:secGL?Math.max(4,2*nR):secPST?Math.max(2*smag,Math.min(3*smag,60)):Math.max(Math.min(2*smag,200),Math.ceil(total*secPer*.5/secStep)*secStep);
   const regF=legs.filter(l=>l.k==="reg").reduce((s,l)=>s+legFights(l),0)*mul;
   const hard=legs.some(l=>l.k==="reg"&&l.r.d>=3);
   // HP goes back to full every time you enter a region or a tunnel (checked in-game, Oct 2026; may be patched),
@@ -766,8 +770,11 @@ function render(){
   const legMax=Math.max(0,...legs.filter(l=>l.k==="reg").map(l=>legFights(l)*mul));
   const adv=Math.min(3,1+(legMax>=4?1:0)+(hard?1:0)),small=2,food=Math.min(2,nR);
   const pack=[];
-  pack.push({n:`${am[0]}`,sub:`${wName(w)} · ${(rounds/mag).toFixed(rounds%mag?1:0)} mags of ${mag}`,q:rounds,cu:rounds*cu1,kg:rounds*(am[1]??.02),est:1});
-  if(sec)pack.push({n:AMMO[sec.ammo[0]][0],sub:`${wName(sec)} · ${secGL?"about 2 per region":(secRounds/smag).toFixed(secRounds%smag?1:0)+" mags of "+smag}`,q:secRounds,cu:secRounds*AMMO[sec.ammo[0]][2],kg:secRounds*(AMMO[sec.ammo[0]][1]??.02),est:1});
+  const mags=(r,m)=>r<m?`part of one ${fmt(m)}-round mag`:`${(r/m).toFixed(r%m?1:0)} mags of ${m}`;
+  const secSub=sec?`${wName(sec)} · ${secGL?"about 2 per region":mags(secRounds,smag)}`:"";
+  if(sec&&secAmK===S.pammo){const q=rounds+secRounds;pack.push({n:`${am[0]}`,sub:`${wName(w)} · ${mags(rounds,mag)} + ${secSub}`,q,cu:q*cu1,kg:q*(am[1]??.02),est:1})}
+  else{pack.push({n:`${am[0]}`,sub:`${wName(w)} · ${mags(rounds,mag)}`,q:rounds,cu:rounds*cu1,kg:rounds*(am[1]??.02),est:1});
+    if(sec)pack.push({n:sam[0],sub:secSub,q:secRounds,cu:secRounds*(sam[2]??2),kg:secRounds*(sam[1]??.02),est:1})}
   const M=Object.assign({main:"Advanced First Aid Kit",backup:"Small First Aid Kit",food:"Energy Bar"},S.meds);
   const healAs=(name,q0,from)=>Math.max(1,Math.ceil(q0*HEAL[from][0]/(HEAL[name][0]*(1+healBonus))-1e-9));
   const mq=healAs(M.main,adv,"Advanced First Aid Kit"),bq=healAs(M.backup,small,"Small First Aid Kit");
@@ -783,11 +790,12 @@ function render(){
   const packed=pack.reduce((s,p)=>s+p.cu,0),packedKg=Math.round(pack.reduce((s,p)=>s+(p.kg||0),0)*10)/10;
   const eqUsed=pack.filter(p=>p.eq).length;
   const swapSel=p=>{const opts=p.swap==="food"?Object.keys(FOOD):Object.keys(HEAL);return `<select class="swap" id="sw-${p.swap}" data-sw="${p.swap}" aria-label="Swap ${p.swap==="food"?"food":"heal item"}">${opts.map(o=>`<option${o===p.n?" selected":""}>${esc(o)}</option>`).join("")}</select>`};
-  $("pack").innerHTML=pack.map(p=>`<li class="${p.flag?"flag":""}"><span class="nm">${p.swap?swapSel(p):p.n.startsWith("<")?p.n:esc(p.n)}<small>${p.sub}</small></span><span class="q">${p.note?"":fmt(p.q)}</span><span class="cu">${p.note?"":p.eq?(p.slot||"rig slot"):fmt(p.cu)+" CU"+(p.kg?" · "+(Math.round(p.kg*10)/10)+" kg":"")}</span></li>`).join("");
+  $("pack").innerHTML=pack.map(p=>`<li class="${p.flag?"flag":""}"><span class="nm">${p.swap?swapSel(p):p.n.startsWith("<")?p.n:iName(p.n)}<small>${p.sub}</small></span><span class="q">${p.note?"":fmt(p.q)}</span><span class="cu">${p.note?"":p.eq?(p.slot||"rig slot"):fmt(p.cu)+" CU"+(p.kg?" · "+(Math.round(p.kg*10)/10)+" kg":"")}</span></li>`).join("");
   $("math").innerHTML=`<span><code>${raw}</code> fights on the route${U("Fights per leg are our guess: tunnel 2 (enemies respawn there), easy region 2, medium 3, hard 4, very hard 5, +1 per region at night.")} × <code>${mul}</code> for ${S.style} = <code>${+fights.toFixed(1)}</code>, plus <code>1</code> spare fight</span>
   <span>× <code>${per}</code> rounds per fight for a ${CAT[w.c][1]}${w.fm.includes("A")&&["RFL","SHG","HRF"].includes(w.c)?" with auto":""}${U("Rounds per fight is our guess per weapon type.")} = <code>${fmt(Math.ceil(total*per))}</code>, rounded up to <code>${fmt(rounds)}</code></span>
   <span>Never less than 3 mags (max 300 rounds): the rule of thumb players give most${rounds===floor&&floor>Math.ceil(total*per)?", and it applies here":""}</span>
-  <span>${fmt(rounds)} × ${cu1} CU = <code>${fmt(rounds*cu1)} CU</code>${AMMO_UNSURE[S.pammo]?U(AMMO_UNSURE[S.pammo]):""}</span>`;
+  <span>${fmt(rounds)} × ${cu1} CU = <code>${fmt(rounds*cu1)} CU</code>${AMMO_UNSURE[S.pammo]?U(AMMO_UNSURE[S.pammo]):""}</span>${!sec?"":`
+  <span>Second weapon, ${wName(sec)}: ${secGL?`about 2 grenades per region, at least 4 = <code>${secRounds}</code>`:secPST?`a backup sidearm, 2 to 3 mags = <code>${fmt(secRounds)}</code>`:`a second main gun shares the fights, so half: <code>${+(total).toFixed(1)}</code> × <code>${secPer}</code> × <code>0.5</code>, at least 2 mags = <code>${fmt(secRounds)}</code>`}${U("Our guess. Tell us what you actually use.")}${secAmK===S.pammo?". Same ammo as your main weapon, so it's one line in the list.":""}</span>`}`;
 
   /* route notes */
   const tips=[];
@@ -866,10 +874,10 @@ function render(){
   $("mbtxt").textContent=`${fmt(rounds)} RDS · ${fmt(Math.max(0,cap-packed))} CU · ${Math.max(0,Math.round((kgCap-packedKg)*10)/10)} KG`;
 
   /* where to get it */
-  const items=[];const add=(n,label,note)=>items.push({n,label:label||esc(n),note:note||""});
+  const items=[];const add=(n,label,note)=>items.push({n,label:label||iName(n),note:note||""});
   add(w.n,wName(w),"main weapon");B.picked.forEach(p=>add(p.n,null,(SLOTN[p.s]||"part").toLowerCase()+(p.lvl?` · weapon level ${p.lvl}`:"")));
   add(am[0],null,"ammo");
-  if(sec){add(sec.n,wName(sec),"second weapon");if(secMagIdx>=0)add(PT(secMagIdx).n,null,"magazine");if(AMMO[sec.ammo[0]][0]!==am[0])add(AMMO[sec.ammo[0]][0],null,"ammo")}
+  if(sec){add(sec.n,wName(sec),"second weapon");if(secMagIdx>=0)add(PT(secMagIdx).n,null,"second weapon magazine");if(secAmK!==S.pammo)add(sam[0],null,"ammo")}
   pack.filter(p=>p.swap||/Drill|Rig Light/.test(p.n)).forEach(p=>add(p.n));
   const needV={};
   const rowH=it=>{const v=vendOf(it.n),l=lootOf(it.n).slice(0,2);
@@ -888,8 +896,8 @@ function render(){
   $("getbox").innerHTML=`<ul class="gets">${list}</ul>`+(reps?`<div class="reps"><h3>Reputation</h3>${reps}<p class="hint" style="margin:0">Reputation goes up when you turn in quests and when you kill units of other factions. It goes down when you hurt that faction's own units. Killing Water Thieves, cultists or rogue AI raises it with every major faction, so they're the safe targets: Water Thieves hang around ${regName("Frozen Swamp")}, and cultists show up in the tunnels. Higher loyalty also makes buying cheaper: LL1 pays 125%, LL2 100%, LL3 75% (Bunco keeps its prices).</p></div>`:"")+`<p class="hint" style="margin:0">LL = the vendor's loyalty level. Loot chances are per container, from the wiki's loot tables. Since February 2026, ammo, meds and rig equipment can also be crafted in the Innards.</p>`;
 
   /* before you drop */
-  const pkd=pack.filter(p=>!p.note);const drops=[...pkd.map(p=>`${fmt(p.q)} × ${p.n.replace(/<[^>]+>/g,"")}`),...(S.via==="direct"&&!tg.free?[`Fast Travel Drone and about ${WATER[tg.n]} water (or Bunco's garage)`]:[]),"Rig modules and weapons are fine to risk: they stay in your gravestone if you die.","Everything else you carry drops when you die."];
-  $("drop").innerHTML=drops.map((d,i)=>i<pkd.length?`<label class="check" for="d${i}"><input type="checkbox" id="d${i}"><span>${esc(d)}</span></label>`:`<p class="hint" style="margin:4px 0 0">${esc(d)}</p>`).join("");
+  const pkd=pack.filter(p=>!p.note);const drops=[...pkd.map(p=>`${fmt(p.q)} × ${iName(p.n.replace(/<[^>]+>/g,""))}`),...(S.via==="direct"&&!tg.free?[`Fast Travel Drone and about ${WATER[tg.n]} water (or Bunco's garage)`]:[]),"Rig modules and weapons are fine to risk: they stay in your gravestone if you die.","Everything else you carry drops when you die."];
+  $("drop").innerHTML=drops.map((d,i)=>i<pkd.length?`<label class="check" for="d${i}"><input type="checkbox" id="d${i}"><span>${d}</span></label>`:`<p class="hint" style="margin:4px 0 0">${esc(d)}</p>`).join("");
   saveS();
 }
 
