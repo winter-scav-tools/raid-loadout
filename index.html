@@ -191,6 +191,15 @@ select:hover,input[type="number"]:hover{border-color:var(--muted)}
 .pack .q{font:400 22px/1 var(--f-display);color:var(--ink);font-variant-numeric:tabular-nums;text-align:right;min-width:4ch}
 .pack .cu{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;text-align:right;min-width:7ch}
 .pack .nm{min-width:0;overflow-wrap:anywhere}
+/* icon "slot": a lighter tile like an inventory cell (same as the Stash Ledger), so dark icons don't vanish on the dark page */
+.icb{display:grid;place-items:center;flex:none;width:40px;height:40px;padding:3px;border:1px solid var(--rail);border-radius:3px;background:radial-gradient(circle at 50% 42%,#3a4649 0%,#232c2e 62%,#192022 100%)}
+.icb.wide{width:72px}
+.ic{width:100%;height:100%;object-fit:contain;filter:drop-shadow(0 0 1px rgba(223,228,226,.45)) drop-shadow(0 1px 2px rgba(0,0,0,.6))}
+.ic.icsp{filter:blur(8px) grayscale(1)}
+.wimg{width:280px;max-width:100%;height:140px;padding:8px;overflow:hidden}
+.wimg .ic{min-height:0;min-width:0}
+.iline{display:flex;gap:10px;align-items:flex-start;min-width:0}
+.iline>span:last-child{min-width:0;flex:1}
 .pack .nm small{display:block;color:var(--muted);font-size:12px}
 .pack select.swap{width:auto;max-width:100%;padding:3px 6px;font-size:13px;background:var(--panel);margin-bottom:2px}
 .pack li.flag .nm::before{content:"! ";color:var(--red);font-weight:700}
@@ -242,6 +251,11 @@ details.fold>summary small{color:var(--muted);font-size:12px}
 
 footer{color:var(--muted);font-size:12px;display:flex;flex-direction:column;gap:6px;max-width:80ch;border-top:1px solid var(--line);padding-top:16px}
 footer b{color:var(--ink)}
+footer:has(.fmeta){max-width:118ch}
+.fmeta{display:grid;grid-template-columns:max-content 1fr;gap:5px 16px;margin:0}
+.fmeta dt{font:16px/1.25 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+.fmeta dd{margin:0;line-height:1.5;color:var(--muted)}
+@media (max-width:480px){.fmeta{grid-template-columns:1fr;gap:0}.fmeta dt{margin-top:8px}.fmeta dt:first-child{margin-top:0}}
 .fnotes>summary{cursor:pointer;color:var(--ink);width:max-content;max-width:100%}
 .fnotes>span{display:block;margin-top:6px}
 </style>
@@ -376,9 +390,14 @@ footer b{color:var(--ink)}
 </div>
 
 <footer>
-  <span><b>?</b> = our estimate, not from the wiki. Ammo and med counts start from what players post (at least 3 mags, Advanced kits) and our guess of fights per region, until players report real numbers. Used more or less on a run? <a href="https://github.com/winter-scav-tools/raid-loadout/issues/new" target="_blank" rel="noopener">Tell us in an issue</a></span>
-  <span><b>Unofficial fan-made tool,</b> not affiliated with Fun Dog Studios. Support the devs: <a href="https://store.steampowered.com/app/2828860/The_Forever_Winter/" target="_blank" rel="noopener">Steam</a> · <a href="https://store.epicgames.com/en-US/p/the-forever-winter-8b8280" target="_blank" rel="noopener">Epic Games Store</a> · <a href="https://www.fundogstudios.com/" target="_blank" rel="noopener">fundogstudios.com</a></span>
-  <span>Raid Loadout v1.02 · <b>Made by scavs, for scavs,</b> part of <a href="https://github.com/winter-scav-tools" target="_blank" rel="noopener">Winter Scav Tools</a> · Built with help from Claude (AI), no AI art · Data from <a href="https://theforeverwinter.wiki.gg/" target="_blank" rel="noopener">The Forever Winter Wiki</a> under <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, checked 28 Oct 2026</span>
+  <dl class="fmeta">
+    <dt>Version</dt><dd>Raid Loadout v1.03 · <b>Made by scavs, for scavs</b> · part of <a href="https://github.com/winter-scav-tools" target="_blank" rel="noopener">Winter Scav Tools</a> · keep or sell? Try <a href="../stash-ledger/">Stash Ledger</a></dd>
+    <dt>Estimates</dt><dd><b>?</b> = our estimate or not checked in-game yet. Ammo and med counts start from what players post and our guess of fights per region. Used more or less on a run? <a href="https://github.com/winter-scav-tools/raid-loadout/issues/new" target="_blank" rel="noopener">Tell us in an issue</a></dd>
+    <dt>License</dt><dd>Code: <a href="https://github.com/winter-scav-tools/raid-loadout/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0</a> · Data: <a href="https://theforeverwinter.wiki.gg/" target="_blank" rel="noopener">The Forever Winter Wiki</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, checked 28 Oct 2026 (game patch 0.9.5.3)</dd>
+    <dt>Icons</dt><dd>© Fun Dog Studios, used with their permission. <b>Not covered by the GPL</b>: don't reuse them.</dd>
+    <dt>Made</dt><dd>With help from Claude (AI) · no AI art</dd>
+    <dt>Support</dt><dd><b>Unofficial fan-made tool</b>, not affiliated with Fun Dog Studios. Get the game: <a href="https://store.steampowered.com/app/2828860/The_Forever_Winter/" target="_blank" rel="noopener">Steam</a> · <a href="https://store.epicgames.com/en-US/p/the-forever-winter-8b8280" target="_blank" rel="noopener">Epic Games Store</a> · <a href="https://www.fundogstudios.com/" target="_blank" rel="noopener">fundogstudios.com</a></dd>
+  </dl>
   <details class="fnotes"><summary>How to read this page</summary>
     <span>Weapon stats, weapon parts, ammo sizes, rig sizes and med kits come from the wiki. Region difficulty comes from player opinions and is marked ?.</span>
     <span>The in-game weapon stat card is often wrong. The wiki says only accuracy and magazine size visibly change how a gun performs, so that's what we show.</span>
@@ -609,6 +628,15 @@ const regName=(n,html=true)=>html?esc(n):n;
 const isCls=n=>sf&&CLASSIFIED.has(n);
 const SPOIL_ITEM=/rail ?gun|AT-43|\.50 PST/i;
 const iName=n=>sf&&SPOIL_ITEM.test(n)?spl(esc(n)):esc(n);
+// Icons: (c) Fun Dog Studios, used with their permission (Oct 2026). Not covered by the GPL.
+// Weapons, ammo and gear come from this site's icons/ folder; goal loot from the Stash Ledger's icons/ (same site).
+const ON_SITE=location.hostname==="winter-scav-tools.github.io";
+const LO_ICON_BASE=ON_SITE?"icons/":"https://winter-scav-tools.github.io/raid-loadout/icons/";
+const LEDGER_ICON_BASE=ON_SITE?"../stash-ledger/icons/":"https://winter-scav-tools.github.io/stash-ledger/icons/";
+const slug=n=>n.toLowerCase().replace(/&/g,"and").replace(/[^a-z0-9]+/g,"-").replace(/^-|-$/g,"");
+const LO_ICONS=new Set(["12-7x55mm-subsonic-ammo", "12-gauge-buckshot", "20x105mm-anti-tank", "308-ammo", "357-magnum-ammo", "36m-antitank", "40mm-grenade", "45-acp-ammo", "47-typ", "5-45x39mm-ammo", "5-45x39mm-ammo-surplus", "5-45x39mm-cryo-ammo", "5-56x45mm-ammo", "5-7x28mm-ammo", "50-bmg", "50-pst-ammo", "7-62x39mm-ammo", "7-62x54mmr-ammo", "87-target", "9x19mm-ammo", "aa12", "advanced-first-aid-kit", "ak", "apc9-pro", "at-43-mass", "c96", "candy-bar", "canteen", "claw", "cluster-grenade", "deployable-drill", "energy-bar", "enuggets", "fast-travel-drone", "food-tin", "frag-grenade", "g-l-19", "g36", "gm6", "grenade-launcher", "happy-cookies", "kriss-vector-45", "lmg-p", "m16", "m4a1", "m60", "m79-sawed-off", "mateo-model-j", "mg34", "mre", "nitro-express", "ntw-20", "p90", "painless", "pm-9", "pnp-2k", "potato-chips", "pp-19-vityaz", "ppsh-41", "pretzels", "r11-rsass", "r8", "rig-light", "rpd", "rpk", "s12", "sa58", "saw", "scar", "small-first-aid-kit", "sog", "spectre-m4", "standard-first-aid-kit", "surplus-rifle", "surplus-shotgun", "svd", "tactical-camera", "tkb-0146", "usas-12", "usp", "vepr-12", "vh-ambi-2", "vik-32l", "viper", "vks-vykhlop", "wlt-mpl", "xm25"]);
+const icon=(n,wide=false)=>{const s=slug(n),sp=sf&&(SPOIL_ITEM.test(n)||CLASSIFIED.has(n));
+  return `<span class="icb${wide?" wide":""}" aria-hidden="true"><img class="ic${sp?" icsp":""}" src="${(LO_ICONS.has(s)?LO_ICON_BASE:LEDGER_ICON_BASE)+s}.png" alt="" loading="lazy" decoding="async" onerror="this.parentNode.remove()"></span>`};
 const wName=(w,html=true)=>isCls(w.n)?(html?spl(esc(w.n)):`[classified ${CAT[w.c][1]}]`):(html?esc(w.n):w.n);
 
 /* ---------- goal (same rules as the ledger) ---------- */
@@ -704,7 +732,7 @@ function render(){
   const cl=isCls(w.n),inCat=W.filter(x=>x.c===w.c),rank=k=>1+inCat.filter(x=>x[k]>w[k]).length;
   const am=AMMO[S.pammo];
   const fmName={S:"Semi",B:"Burst",A:"Auto"};
-  $("wcard").innerHTML=`<div class="wn"><b>${wName(w)}</b><span>${CAT[w.c][0]}${w.buy?` · ${cl?spl(fmt(w.buy)+" cr"):fmt(w.buy)+" cr"}`:" · not sold"}</span></div>
+  $("wcard").innerHTML=`<span class="icb wimg" aria-hidden="true"><img class="ic${cl?" icsp":""}" src="${LO_ICON_BASE+slug(w.n)}.png" alt="" decoding="async" onerror="this.parentNode.remove()"></span><div class="wn"><b>${wName(w)}</b><span>${CAT[w.c][0]}${w.buy?` · ${cl?spl(fmt(w.buy)+" cr"):fmt(w.buy)+" cr"}`:" · not sold"}</span></div>
   <dl class="stats">
     <div><dt>Damage</dt><dd>${cl?spl(fmt(w.dmg)):fmt(w.dmg)} <small>#${rank("dmg")} of ${inCat.length}</small></dd></div>
     <div><dt>DPS</dt><dd>${cl?spl(fmt(w.dps)):fmt(w.dps)} <small>#${rank("dps")} of ${inCat.length}</small></dd></div>
@@ -790,7 +818,7 @@ function render(){
   const packed=pack.reduce((s,p)=>s+p.cu,0),packedKg=Math.round(pack.reduce((s,p)=>s+(p.kg||0),0)*10)/10;
   const eqUsed=pack.filter(p=>p.eq).length;
   const swapSel=p=>{const opts=p.swap==="food"?Object.keys(FOOD):Object.keys(HEAL);return `<select class="swap" id="sw-${p.swap}" data-sw="${p.swap}" aria-label="Swap ${p.swap==="food"?"food":"heal item"}">${opts.map(o=>`<option${o===p.n?" selected":""}>${esc(o)}</option>`).join("")}</select>`};
-  $("pack").innerHTML=pack.map(p=>`<li class="${p.flag?"flag":""}"><span class="nm">${p.swap?swapSel(p):p.n.startsWith("<")?p.n:iName(p.n)}<small>${p.sub}</small></span><span class="q">${p.note?"":fmt(p.q)}</span><span class="cu">${p.note?"":p.eq?(p.slot||"rig slot"):fmt(p.cu)+" CU"+(p.kg?" · "+(Math.round(p.kg*10)/10)+" kg":"")}</span></li>`).join("");
+  $("pack").innerHTML=pack.map(p=>`<li class="${p.flag?"flag":""}"><span class="nm iline">${p.note?"":icon(p.n)}<span>${p.swap?swapSel(p):p.n.startsWith("<")?p.n:iName(p.n)}<small>${p.sub}</small></span></span><span class="q">${p.note?"":fmt(p.q)}</span><span class="cu">${p.note?"":p.eq?(p.slot||"rig slot"):fmt(p.cu)+" CU"+(p.kg?" · "+(Math.round(p.kg*10)/10)+" kg":"")}</span></li>`).join("");
   $("math").innerHTML=`<span><code>${raw}</code> fights on the route${U("Fights per leg are our guess: tunnel 2 (enemies respawn there), easy region 2, medium 3, hard 4, very hard 5, +1 per region at night.")} × <code>${mul}</code> for ${S.style} = <code>${+fights.toFixed(1)}</code>, plus <code>1</code> spare fight</span>
   <span>× <code>${per}</code> rounds per fight for a ${CAT[w.c][1]}${w.fm.includes("A")&&["RFL","SHG","HRF"].includes(w.c)?" with auto":""}${U("Rounds per fight is our guess per weapon type.")} = <code>${fmt(Math.ceil(total*per))}</code>, rounded up to <code>${fmt(rounds)}</code></span>
   <span>Never less than 3 mags (max 300 rounds): the rule of thumb players give most${rounds===floor&&floor>Math.ceil(total*per)?", and it applies here":""}</span>
@@ -826,7 +854,7 @@ function render(){
   let gkg=0;left.forEach(x=>{if(x.s==="L"){large.push(x);if(!LARGE_KG_BUG)gkg+=x.left*(GKG[x.n]??.5)}else{if(x.s==null){unk++;gcu+=x.left*15}else gcu+=x.left*x.s;gkg+=x.left*(GKG[x.n]??.5)}});gkg=Math.round(gkg*10)/10;
   $("goalhint").textContent=!GD?"":g&&S.goal===null?"Using your Stash Ledger goal. Pick another here to override it; the ledger isn't changed.":ledgerGoal?"":"Tip: set a goal in the Stash Ledger's raid planner and it shows up here.";
   $("goalsec").hidden=!g;
-  if(g){$("goalbox").innerHTML=left.length?`<p class="hint" style="margin:0">${esc(goalName(g))} still needs ${left.length} kind${left.length>1?"s":""} of item${have[g]?", after what you have":""}.</p><ul class="pack">`+left.map(x=>`<li><span class="nm">${iName(x.n)}</span><span class="q">${x.left}</span><span class="cu">${x.s==="L"?"large bin":x.s==null?"~"+fmt(x.left*15)+" CU"+U("Size unknown, guessed at 15 CU each."):fmt(x.left*x.s)+" CU"}</span></li>`).join("")+`</ul>${large.length?`<p class="hint" style="margin:0">Large items go in a large item bin and take no CU. Check your rig has a free bin. They list a weight, but right now the game doesn't add it to your rig, which looks like a bug${U("Checked in-game, Oct 2026. A patch may start counting it, so leave some kg spare.")}.</p>`:""}`:!goalKnown(g)?`<p class="empty">This goal isn't in this page's data yet (it may come from a newer Stash Ledger). Pick another one here.</p>`:`<p class="empty">Nothing left to collect for ${esc(goalName(g))}. Ready to build.</p>`}
+  if(g){$("goalbox").innerHTML=left.length?`<p class="hint" style="margin:0">${esc(goalName(g))} still needs ${left.length} kind${left.length>1?"s":""} of item${have[g]?", after what you have":""}.</p><ul class="pack">`+left.map(x=>`<li><span class="nm iline">${icon(x.n)}<span>${iName(x.n)}</span></span><span class="q">${x.left}</span><span class="cu">${x.s==="L"?"large bin":x.s==null?"~"+fmt(x.left*15)+" CU"+U("Size unknown, guessed at 15 CU each."):fmt(x.left*x.s)+" CU"}</span></li>`).join("")+`</ul>${large.length?`<p class="hint" style="margin:0">Large items go in a large item bin and take no CU. Check your rig has a free bin. They list a weight, but right now the game doesn't add it to your rig, which looks like a bug${U("Checked in-game, Oct 2026. A patch may start counting it, so leave some kg spare.")}.</p>`:""}`:!goalKnown(g)?`<p class="empty">This goal isn't in this page's data yet (it may come from a newer Stash Ledger). Pick another one here.</p>`:`<p class="empty">Nothing left to collect for ${esc(goalName(g))}. Ready to build.</p>`}
 
   /* capacity bar */
   const free=cap-packed-gcu,over=packed>cap,overKg=packedKg>kgCap,freeKg=Math.round((kgCap-packedKg-gkg)*10)/10;
@@ -838,7 +866,8 @@ function render(){
   $("kgbar").setAttribute("aria-label",`Packed ${packedKg} kg, goal loot ${gkg} kg, of ${kgCap} kg`);
   $("lgkg").textContent=kgCap;$("bigkg").textContent=Math.max(0,Math.round((kgCap-packedKg)*10)/10);
   $("lgpk").textContent=fmt(packed);$("lggl").textContent=fmt(gcu)+(unk?"~":"");$("lgfr").textContent=fmt(Math.max(0,free));$("lgcap").textContent=fmt(cap);
-  $("bigammo").textContent=fmt(rounds);$("bigammol").textContent=`rounds of ${am[0]}`;
+  const mainAmmo=rounds+(sec&&secAmK===S.pammo?secRounds:0); // same ammo on both guns: one total, like the pack list
+  $("bigammo").textContent=fmt(mainAmmo);$("bigammol").textContent=`rounds of ${am[0]}`;
   $("bigfree").textContent=fmt(Math.max(0,cap-packed));
   const warnA=over?`<div class="warn"><b>Over capacity.</b> Your kit is ${fmt(packed-cap)} CU more than this rig holds. Bring less ammo, a smaller round, or a bigger rig.</div>`:free<0?`<div class="warn"><b>Goal loot won't fit.</b> After your kit there's ${fmt(cap-packed)} CU left, but the goal needs about ${fmt(gcu)}. Plan two runs or pack lighter.</div>`:"";
   const warns=[...gw];if(warnA)warns.push(warnA);
@@ -871,7 +900,7 @@ function render(){
     return `<li><span class="nm">${pn[0].toUpperCase()+pn.slice(1)} · ${c.m}${c.hi?" ▲":""}<small>${c.kit.length?"Kit: "+sumTxt(c.kit):""}${c.kit.length&&c.goal.length?" · ":""}${c.goal.length?"Goal: "+sumTxt(c.goal):""}${!c.kit.length&&!c.goal.length?"Empty, free for loot":""}</small></span><span class="q">${Math.max(pc,pw)}%</span><span class="cu">${fmt(Math.round(c.ucu))}/${fmt(Math.round(c.cu))} CU · ${kgS(c.ukg)}/${kgS(c.kg)} kg</span></li>`}).join("")+`</ul>`;
   $("mwarn").innerHTML=warns.join("");
   $("mroute").innerHTML=legs.map(l=>l.k==="tun"?"Tunnel "+TIERS[l.t]:regName(l.r.n)).join(" → ")+` · ${S.style}${S.night?" · night":""}`;
-  $("mbtxt").textContent=`${fmt(rounds)} RDS · ${fmt(Math.max(0,cap-packed))} CU · ${Math.max(0,Math.round((kgCap-packedKg)*10)/10)} KG`;
+  $("mbtxt").textContent=`${fmt(mainAmmo)} RDS · ${fmt(Math.max(0,cap-packed))} CU · ${Math.max(0,Math.round((kgCap-packedKg)*10)/10)} KG`;
 
   /* where to get it */
   const items=[];const add=(n,label,note)=>items.push({n,label:label||iName(n),note:note||""});
@@ -884,7 +913,7 @@ function render(){
     if(v.length&&!v.some(x=>!VUNLOCK[x.v]&&x.ll===1)){const lo=Math.min(...v.map(x=>x.ll));v.filter(x=>x.ll===lo).forEach(x=>(needV[x.v]=needV[x.v]||[]).push({n:it.label,ll:x.ll}))}
     const buy=v.length?v.map(x=>`<b>${VN[x.v][0]}</b> LL${x.ll}`).join(" · "):"not sold by vendors";
     const lt=l.map(x=>x.ty==="U"?`dropped by ${esc(x.n)}`:x.ty==="G"?`${esc(x.n)} (${x.ch}%)`:`${esc(x.n)} ${x.ch}%${x.maps.length?" on "+x.maps.map(m=>RBY[m]?regName(m):esc(m)).join(", "):""}${x.night?" at night":""}`).join("; ");
-    return `<li><span class="gn">${it.label} <small>${it.note}</small></span><span class="gb">Buy: ${buy}</span>${lt?`<span class="gl">Loot: ${lt}</span>`:""}</li>`};
+    return `<li><div class="iline">${icon(it.n,!!WBY[it.n])}<span style="display:flex;flex-direction:column;gap:2px"><span class="gn">${it.label} <small>${it.note}</small></span><span class="gb">Buy: ${buy}</span>${lt?`<span class="gl">Loot: ${lt}</span>`:""}</span></div></li>`};
   const nUp=[...up].filter(x=>x==="1").length;
   const hiNeed=[...rig.mods].some((m,i)=>up[i]==="1"&&hiLL(m,rig.pos[i])===3);
   if(rig.ll===3||hiNeed)(needV.D=needV.D||[]).push({n:rig.ll===3?esc(rig.n)+" rig":"High quality modules",ll:3});

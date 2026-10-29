@@ -2,7 +2,7 @@
 
 A fan-made raid packing tool for **The Forever Winter**.
 
-Current version: **v1.02** · Live page: https://winter-scav-tools.github.io/raid-loadout/
+Current version: **v1.03** · Live page: https://winter-scav-tools.github.io/raid-loadout/
 
 - **Ammo for your route:** pick your target region and how you get there. A short hop into Scorched Enclave needs less than a long tunnel run to Elephant Mausoleum. The page shows how the count was worked out.
 - **Weapons and parts:** pick the parts on your gun from a list. The magazine decides how ammo is counted, and every change shows green (better) or red (worse).
@@ -25,9 +25,9 @@ Your choices are saved in your own browser, and synced only if you turned on Syn
 
 **Made by scavs, for scavs.** Part of [Winter Scav Tools](https://github.com/winter-scav-tools), fan-made tools for The Forever Winter.
 
-**How it's made.** Built by NotBlind Media with help from Claude, an AI. The AI writes the code and pulls the numbers from the wiki, which is how one fan can keep this up to date after every patch. The data itself comes from the wiki's human editors, players check it in-game (that's what the **?** marks are for), and there's no AI art or game art anywhere on the page.
+**How it's made.** Built by NotBlind Media with help from Claude, an AI. The AI writes the code and pulls the numbers from the wiki, which is how one fan can keep this up to date after every patch. The data itself comes from the wiki's human editors, players check it in-game (that's what the **?** marks are for), and there's no AI art anywhere on the page.
 
-Unofficial fan-made tool. Not affiliated with or endorsed by Fun Dog Studios. No game art is used.
+Unofficial fan-made tool. Not affiliated with or endorsed by Fun Dog Studios. Weapon and item icons © Fun Dog Studios, used with their permission for this free tool; see [icons/CREDITS.md](icons/CREDITS.md). Goal-loot icons come from the Stash Ledger's icon folder on the same site. Everything else is fan-made.
 
 Like the game? Support the devs: [Steam](https://store.steampowered.com/app/2828860/The_Forever_Winter/) · [Epic Games Store](https://store.epicgames.com/en-US/p/the-forever-winter-8b8280) · [Fun Dog Studios](https://www.fundogstudios.com/)
 
@@ -36,3 +36,5 @@ Weapon, part, item, rig, vendor and character data comes from [The Forever Winte
 ## License
 
 The code is licensed under [GPL-3.0](LICENSE): you can copy and change it, but anything you publish from it has to stay open source under GPL-3.0 too. The wiki data is CC BY-SA 4.0 (see Credits). The license only covers this project's own code; The Forever Winter and everything in it belong to Fun Dog Studios.
+
+The icons in icons/ are not covered by GPL-3.0: they belong to Fun Dog Studios and are used with their permission. Don't reuse them, and never in anything paid.
