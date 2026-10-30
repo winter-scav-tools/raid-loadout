@@ -2,7 +2,7 @@
 
 A fan-made raid packing tool for **The Forever Winter**.
 
-Current version: **v1.03** · Live page: https://winter-scav-tools.github.io/raid-loadout/
+Current version: **v1.04** · Live page: https://winter-scav-tools.github.io/raid-loadout/
 
 - **Ammo for your route:** pick your target region and how you get there. A short hop into Scorched Enclave needs less than a long tunnel run to Elephant Mausoleum. The page shows how the count was worked out.
 - **Weapons and parts:** pick the parts on your gun from a list. The magazine decides how ammo is counted, and every change shows green (better) or red (worse).
