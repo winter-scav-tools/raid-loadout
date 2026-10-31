@@ -116,6 +116,7 @@ select:hover,input[type="number"]:hover{border-color:var(--muted)}
 .seg button+button{border-left:1px solid var(--rail)}
 .seg button[aria-pressed="true"]{background:var(--red);color:var(--bg)}
 .seg.v button{display:flex;flex-direction:column;gap:3px;align-items:center}
+.wtab{grid-template-columns:1fr 1fr}
 .seg.v button small{font:11px var(--f-body);letter-spacing:0;text-transform:none}
 .check{display:flex;gap:10px;align-items:flex-start;font-size:13px;cursor:pointer}
 .check input{accent-color:var(--red);width:16px;height:16px;margin:2px 0 0;flex:none}
@@ -310,16 +311,17 @@ footer:has(.fmeta){max-width:118ch}
       <div class="field"><label for="prim">Main weapon</label><select id="prim"></select></div>
       <div class="field"><label for="pammo">Ammo</label><select id="pammo"></select></div>
     </div>
-    <div class="parts" id="parts"></div>
     <div class="row2">
       <div class="field"><label for="sec">Second weapon</label><select id="sec"></select></div>
-      <div class="field" id="secmagf"><label for="secmag">Second weapon magazine</label><select id="secmag"></select></div>
+      <div class="field" id="sammof"><label for="sammo">Second weapon ammo</label><select id="sammo"></select></div>
     </div>
     <div id="gunwarn"></div>
     <div class="row2">
       <div class="field"><label for="gren">Grenades</label><select id="gren"><option value="">None</option><option>Frag Grenade</option><option>Cluster Grenade</option></select></div>
       <div class="field" id="grenqf"><label for="grenq">How many</label><select id="grenq"></select></div>
     </div>
+    <div class="seg v wtab" id="wtab" role="group" aria-label="Show parts and stats for" hidden></div>
+    <div class="parts" id="parts"></div>
     <div class="wcard" id="wcard"></div>
   </section>
 
@@ -391,7 +393,7 @@ footer:has(.fmeta){max-width:118ch}
 
 <footer>
   <dl class="fmeta">
-    <dt>Version</dt><dd>Raid Loadout v1.04 · <b>Made by scavs, for scavs</b> · part of <a href="https://github.com/winter-scav-tools" target="_blank" rel="noopener">Winter Scav Tools</a> · keep or sell? Try <a href="../stash-ledger/">Stash Ledger</a></dd>
+    <dt>Version</dt><dd>Raid Loadout v1.05 · <b>Made by scavs, for scavs</b> · part of <a href="https://github.com/winter-scav-tools" target="_blank" rel="noopener">Winter Scav Tools</a> · keep or sell? Try <a href="../stash-ledger/">Stash Ledger</a></dd>
     <dt>Estimates</dt><dd><b>?</b> = our estimate or not checked in-game yet. Ammo and med counts start from what players post and our guess of fights per region. Used more or less on a run? <a href="https://github.com/winter-scav-tools/raid-loadout/issues/new" target="_blank" rel="noopener">Tell us in an issue</a></dd>
     <dt>License</dt><dd>Code: <a href="https://github.com/winter-scav-tools/raid-loadout/blob/main/LICENSE" target="_blank" rel="noopener">GPL-3.0</a> · Data: <a href="https://theforeverwinter.wiki.gg/" target="_blank" rel="noopener">The Forever Winter Wiki</a>, <a href="https://creativecommons.org/licenses/by-sa/4.0/" target="_blank" rel="noopener">CC BY-SA 4.0</a>, checked 28 Oct 2026 (game patch 0.9.5.3)</dd>
     <dt>Icons</dt><dd>© Fun Dog Studios, used with their permission. <b>Not covered by the GPL</b>: don't reuse them.</dd>
@@ -465,7 +467,7 @@ const PT=i=>{const p=PD.p[i];return{i,n:p[0],s:p[1],cap:p[2],sup:p[3],acc:p[4],r
 const baseMag=w=>PD.b[w.n]??w.mag;
 function slotsFor(w){const by={};(PD.w[w.n]||[]).forEach(e=>{const a=Array.isArray(e)?e:[e],p=PT(a[0]);if(p.s==="MAG"&&!p.cap)return;p.req=a.slice(1);(by[p.s]=by[p.s]||[]).push(p)});
   const L=p=>p.s==="MAG"&&!p.lvl?999:p.lvl||0;for(const k in by)by[k].sort((a,b)=>L(a)-L(b)||a.n.localeCompare(b.n));return by}
-function build(w){const by=slotsFor(w),cur=(S.parts[w.n])||{},out={};
+function build(w,src="p"){const by=slotsFor(w),cur=((src==="s"?S.sparts:S.parts)||{})[w.n]||{},out={};
   for(const k in by){let v=cur[k];if(v===undefined&&k==="MAG"){const m=by.MAG.find(p=>p.cap===baseMag(w));v=m?m.i:-1}
     const stock=k==="MAG"?by.MAG.find(p=>p.cap===baseMag(w)):null;
     out[k]=(v!=null&&by[k].some(p=>p.i===v))?v:stock?stock.i:-1}
@@ -474,7 +476,7 @@ function build(w){const by=slotsFor(w),cur=(S.parts[w.n])||{},out={};
   const mag=out.MAG>=0?PT(out.MAG).cap:baseMag(w);
   return{by,out,picked,needs,mag,rof:picked.reduce((a,p)=>a+p.rof,0),sup:picked.some(p=>p.sup),acc:picked.reduce((a,p)=>a+p.acc,0),light:picked.some(p=>/Flashlight/.test(p.n)),canLight:!!(by.RAIL&&by.RAIL.some(p=>/Flashlight/.test(p.n)))}}
 const dl=(d,dec=0)=>{if(!d||Math.abs(d)<1e-9)return"";const v=Math.abs(d).toFixed(dec);return `<small class="${d>0?"up":"dn"}">${d>0?"▲ +":"▼ −"}${v}</small>`};
-let lastChg=null;
+let lastChg=null,wtab="p";
 function diffHTML(w,A,Bn,k){const pn=v=>v>=0?esc(PT(v).n):k==="MAG"?"stock magazine":"nothing";const bits=[];
   if(A.mag!==Bn.mag)bits.push(`magazine ${A.mag} → ${Bn.mag} ${dl(Bn.mag-A.mag)}`,Bn.mag>A.mag?`<span class="dn">slower reload ▼</span>`:`<span class="up">faster reload ▲</span>`);
   if(Math.abs(A.acc-Bn.acc)>1e-9)bits.push(`accuracy ${dl(Bn.acc-A.acc,3)}`);
@@ -564,7 +566,7 @@ const LS=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorag
 const J=(k,d)=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):d}catch(e){return d}};
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const fmt=n=>Math.round(n).toLocaleString("en-US");
-const DEF={target:"Scorched Enclave",via:"walk",viatun:1,mids:{},night:false,prim:"AK",pammo:"545",parts:{},smag:{},mag:{},sec:"USP",rig:"Standard",cap:{},char:"",carry:{},medsk:0,pres:{},pq:0,mods:{},gren:"",grenq:2,style:"normal",goal:null,reached:[],meds:{}};
+const DEF={target:"Scorched Enclave",via:"walk",viatun:1,mids:{},night:false,prim:"AK",pammo:"545",parts:{},smag:{},mag:{},sec:"USP",rig:"Standard",cap:{},char:"",carry:{},medsk:0,pres:{},pq:0,mods:{},sparts:{},sammo:"",gren:"",grenq:2,style:"normal",goal:null,reached:[],meds:{}};
 let S=Object.assign({},DEF,J("tfw-lo-state",{}));
 /* every saved or shared value is checked against what the page offers; anything else falls back to the default */
 const own=(o,k)=>typeof k==="string"&&Object.prototype.hasOwnProperty.call(o,k);
@@ -590,6 +592,10 @@ function clean(){
   objOf("mods",a=>RIGS.some(r=>r.n===a),v=>typeof v==="string"&&/^[01]{0,9}$/.test(v));
   objOf("smag",a=>own(WBY,a),v=>Number.isInteger(v));
   objOf("parts",a=>own(WBY,a),v=>isObj(v)&&Object.entries(v).every(([k,i])=>own(SLOTN,k)&&Number.isInteger(i)));
+  // v1.05: the second weapon gets every part slot; its old magazine-only pick (smag) carries over
+  if(isObj(S.smag))for(const [a,i] of Object.entries(S.smag))if(own(WBY,a)&&Number.isInteger(i)&&!(isObj(S.sparts)&&isObj(S.sparts[a])))S.sparts=Object.assign({},S.sparts,{[a]:{MAG:i}});
+  objOf("sparts",a=>own(WBY,a),v=>isObj(v)&&Object.entries(v).every(([k,i])=>own(SLOTN,k)&&Number.isInteger(i)));
+  if(typeof S.sammo!=="string"||!own(AMMO,S.sammo))S.sammo="";
   objOf("mids",a=>/^[0-3]$/.test(a),v=>own(RBY,v));
   objOf("meds",a=>a==="food"||a==="main"||a==="backup",v=>typeof v==="string");
   for(const k of ["main","backup"])if(k in S.meds&&!own(HEAL,S.meds[k]))delete S.meds[k];
@@ -599,11 +605,11 @@ function clean(){
   S.night=false}
 clean();
 /* share links: #lo=<base64url JSON> holds the loadout only (no goal, no reached regions). Only known keys with the right type are taken. */
-const SHARE_KEYS={target:"s",via:"s",viatun:"n",mids:"o",prim:"s",pammo:"s",parts:"o",sec:"s",smag:"o",rig:"s",char:"s",carry:"o",medsk:"n",mods:"o",gren:"s",grenq:"n",style:"s",meds:"o",pres:"o",pq:"n"};
+const SHARE_KEYS={target:"s",via:"s",viatun:"n",mids:"o",prim:"s",pammo:"s",parts:"o",sec:"s",smag:"o",sparts:"o",sammo:"s",rig:"s",char:"s",carry:"o",medsk:"n",mods:"o",gren:"s",grenq:"n",style:"s",meds:"o",pres:"o",pq:"n"};
 const b64e=t=>btoa(unescape(encodeURIComponent(t))).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
 const b64d=t=>decodeURIComponent(escape(atob(t.replace(/-/g,"+").replace(/_/g,"/"))));
 const shareState=()=>{const o={};for(const k in SHARE_KEYS){let v=S[k];
-  if(k==="parts")v={[S.prim]:(S.parts||{})[S.prim]};if(k==="smag")v=S.sec?{[S.sec]:(S.smag||{})[S.sec]}:{};if(k==="carry"||k==="pres")v=S.char?{[S.char]:(S[k]||{})[S.char]}:{};if(k==="mods")v={[S.rig]:(S.mods||{})[S.rig]};
+  if(k==="parts")v={[S.prim]:(S.parts||{})[S.prim]};if(k==="smag")v={};if(k==="sparts")v=S.sec?{[S.sec]:(S.sparts||{})[S.sec]}:{};if(k==="carry"||k==="pres")v=S.char?{[S.char]:(S[k]||{})[S.char]}:{};if(k==="mods")v={[S.rig]:(S.mods||{})[S.rig]};
   o[k]=v}return JSON.parse(JSON.stringify(o))};
 let sharedPrev=null;
 try{const h=location.hash.match(/^#lo=([A-Za-z0-9_-]+)$/);if(h){const o=JSON.parse(b64d(h[1]));if(o&&typeof o==="object"){sharedPrev=JSON.stringify(S);
@@ -698,6 +704,36 @@ function fillGoal(){
   const v=S.goal===null?(ledgerGoal?"__ledger":"__none"):S.goal===""?"__none":S.goal;
   g.value=[...g.options].some(o=>o.value===v)?v:"__none"}
 
+/* parts picker + stat card for one gun; tab "p" = main weapon, "s" = second weapon (same view for both) */
+function drawGun(G,GB,amK,tab){
+  const reqSlots=new Set(Object.values(GB.needs).flat().map(r=>PD.p[r][1]));
+  const show=SLOTORD.filter(k=>GB.by[k]&&(mode==="vet"||k==="MAG"||k==="MZL"||k==="RAIL"||reqSlots.has(k)||(k==="BRL"&&GB.by.BRL.some(p=>p.sup))));
+  const nm=r=>esc(PD.p[r][0]);
+  $("parts").innerHTML=`<div class="ph"><b>${tab==="s"?"Second weapon parts":S.sec?"Main weapon parts":"Parts on this gun"}</b><span>${mode==="vet"?"all slots":"magazine, muzzle and rail; switch to Veteran for every slot"}</span></div>`+
+    (GB.by.MAG?"":`<div class="field"><span class="flabel">Magazine</span><span class="fixed">${baseMag(G)} rounds, no other magazines</span></div>`)+
+    (lastChg&&lastChg.t===tab&&lastChg.w===G.n?`<div class="chg">${lastChg.h}</div>`:"")+
+    show.map(k=>{const opts=GB.by[k];const noneTxt=k==="MAG"?`Stock magazine · ${baseMag(G)} rds`:"None";
+      const hasStock=k!=="MAG"||!opts.some(p=>p.cap===baseMag(G));
+      return `<div class="field"><label for="pt-${k}">${SLOTN[k]}</label><select id="pt-${k}" data-s="${k}">${hasStock?`<option value="-1">${noneTxt}</option>`:""}${opts.map(p=>`<option value="${p.i}">${esc(plabel(p))}</option>`).join("")}</select>${GB.needs[k]?`<span class="need">Needs ${GB.needs[k].map(nm).join(" or ")}</span>`:""}</div>`}).join("");
+  show.forEach(k=>{$("pt-"+k).value=String(GB.out[k])});
+  const cl=isCls(G.n),inCat=W.filter(x=>x.c===G.c),rank=k=>1+inCat.filter(x=>x[k]>G[k]).length;
+  const gam=AMMO[amK],gm=GB.mag;
+  const fmName={S:"Semi",B:"Burst",A:"Auto"};
+  $("wcard").innerHTML=`<span class="icb wimg" aria-hidden="true"><img class="ic${cl?" icsp":""}" src="${LO_ICON_BASE+slug(G.n)}.png" alt="" decoding="async" onerror="this.parentNode.remove()"></span><div class="wn"><b>${wName(G)}</b><span>${CAT[G.c][0]}${G.buy?` · ${cl?spl(fmt(G.buy)+" cr"):fmt(G.buy)+" cr"}`:" · not sold"}</span></div>
+  <dl class="stats">
+    <div><dt>Damage</dt><dd>${cl?spl(fmt(G.dmg)):fmt(G.dmg)} <small>#${rank("dmg")} of ${inCat.length}</small></dd></div>
+    <div><dt>DPS</dt><dd>${cl?spl(fmt(G.dps)):fmt(G.dps)} <small>#${rank("dps")} of ${inCat.length}</small></dd></div>
+    <div><dt>Headshot</dt><dd>×${gam[3]} <small>from ammo</small></dd></div>
+    <div><dt>Fire modes</dt><dd>${[...G.fm].map(c=>fmName[c]).join(" · ")}</dd></div>
+    <div><dt>Rate of fire</dt><dd>${G.rof}/s</dd></div>
+    <div><dt>Your mag</dt><dd>${gm} ${dl(gm-baseMag(G))}${gm>baseMag(G)?` <small class="dn">slower reload</small>`:gm<baseMag(G)?` <small class="up">faster reload</small>`:""}<small> max ${Math.max(G.mag,...(GB.by.MAG||[]).map(p=>p.cap))}</small></dd></div>
+    <div><dt>Suppressed</dt><dd>${GB.sup?`<span class="up">Yes ▲</span>`:(GB.by.MZL||[]).some(p=>p.sup)||(GB.by.BRL||[]).some(p=>p.sup)?"No <small>can be</small>":"No <small>can't be</small>"}</dd></div>
+    <div><dt>Accuracy</dt><dd>${(G.acc+GB.acc).toFixed(GB.acc?3:2)} ${dl(GB.acc,3)}${GB.acc?U("Part values are datamined by the wiki and may be from before the July 2026 weapon overhaul."):""}</dd></div>${GB.rof?`<div><dt>Fire rate</dt><dd>${dl(GB.rof,2)}<small> part value</small></dd></div>`:""}
+    <div><dt>Light</dt><dd>${GB.light?"Flashlight <small>glares in fog</small>":"No"}</dd></div>
+  </dl>
+  <div class="att"><span><b>About parts.</b> Part numbers are datamined from the game files by the wiki. Accuracy and magazine size are what the wiki's data shows, so recoil and stability are left out. Since the July 2026 update, bigger magazines also reload slower. "lvl" is the weapon level a vendor needs before selling the part. Some built-in attachments (underbarrel launchers, bipods, bayonets) don't work yet.</span><span class="rk">Levelling a weapon by using it makes it noticeably more accurate, usually around level 20 to 30.</span>${AMMO_UNSURE[amK]?`<span>${U(AMMO_UNSURE[amK])} ${esc(AMMO_UNSURE[amK])}</span>`:""}</div>`;
+}
+
 /* ---------- render ---------- */
 function render(){
   document.documentElement.dataset.mode=mode;document.documentElement.dataset.cb=cb?"1":"0";
@@ -724,33 +760,7 @@ function render(){
   const w=WBY[S.prim]||WBY.M4A1;
   if(!w.ammo.includes(S.pammo))S.pammo=w.ammo[0];
   $("pammo").innerHTML=w.ammo.map(a=>`<option value="${a}">${esc(AMMO[a][0])} · ${AMMO[a][2]??"2?"} CU/round</option>`).join("");$("pammo").value=S.pammo;
-  const B=build(w),mag=B.mag;
-  const reqSlots=new Set(Object.values(B.needs).flat().map(r=>PD.p[r][1]));
-  const show=SLOTORD.filter(k=>B.by[k]&&(mode==="vet"||k==="MAG"||k==="MZL"||k==="RAIL"||reqSlots.has(k)||(k==="BRL"&&B.by.BRL.some(p=>p.sup))));
-  const nm=r=>esc(PD.p[r][0]);
-  $("parts").innerHTML=`<div class="ph"><b>Parts on this gun</b><span>${mode==="vet"?"all slots":"magazine, muzzle and rail; switch to Veteran for every slot"}</span></div>`+
-    (B.by.MAG?"":`<div class="field"><span class="flabel">Magazine</span><span class="fixed">${baseMag(w)} rounds, no other magazines</span></div>`)+
-    (lastChg&&lastChg.w===w.n?`<div class="chg">${lastChg.h}</div>`:"")+
-    show.map(k=>{const opts=B.by[k];const noneTxt=k==="MAG"?`Stock magazine · ${baseMag(w)} rds`:"None";
-      const hasStock=k!=="MAG"||!opts.some(p=>p.cap===baseMag(w));
-      return `<div class="field"><label for="pt-${k}">${SLOTN[k]}</label><select id="pt-${k}" data-s="${k}">${hasStock?`<option value="-1">${noneTxt}</option>`:""}${opts.map(p=>`<option value="${p.i}">${esc(plabel(p))}</option>`).join("")}</select>${B.needs[k]?`<span class="need">Needs ${B.needs[k].map(nm).join(" or ")}</span>`:""}</div>`}).join("");
-  show.forEach(k=>{$("pt-"+k).value=String(B.out[k])});
-  const cl=isCls(w.n),inCat=W.filter(x=>x.c===w.c),rank=k=>1+inCat.filter(x=>x[k]>w[k]).length;
-  const am=AMMO[S.pammo];
-  const fmName={S:"Semi",B:"Burst",A:"Auto"};
-  $("wcard").innerHTML=`<span class="icb wimg" aria-hidden="true"><img class="ic${cl?" icsp":""}" src="${LO_ICON_BASE+slug(w.n)}.png" alt="" decoding="async" onerror="this.parentNode.remove()"></span><div class="wn"><b>${wName(w)}</b><span>${CAT[w.c][0]}${w.buy?` · ${cl?spl(fmt(w.buy)+" cr"):fmt(w.buy)+" cr"}`:" · not sold"}</span></div>
-  <dl class="stats">
-    <div><dt>Damage</dt><dd>${cl?spl(fmt(w.dmg)):fmt(w.dmg)} <small>#${rank("dmg")} of ${inCat.length}</small></dd></div>
-    <div><dt>DPS</dt><dd>${cl?spl(fmt(w.dps)):fmt(w.dps)} <small>#${rank("dps")} of ${inCat.length}</small></dd></div>
-    <div><dt>Headshot</dt><dd>×${am[3]} <small>from ammo</small></dd></div>
-    <div><dt>Fire modes</dt><dd>${[...w.fm].map(c=>fmName[c]).join(" · ")}</dd></div>
-    <div><dt>Rate of fire</dt><dd>${w.rof}/s</dd></div>
-    <div><dt>Your mag</dt><dd>${mag} ${dl(mag-baseMag(w))}${mag>baseMag(w)?` <small class="dn">slower reload</small>`:mag<baseMag(w)?` <small class="up">faster reload</small>`:""}<small> max ${Math.max(w.mag,...(B.by.MAG||[]).map(p=>p.cap))}</small></dd></div>
-    <div><dt>Suppressed</dt><dd>${B.sup?`<span class="up">Yes ▲</span>`:(B.by.MZL||[]).some(p=>p.sup)||(B.by.BRL||[]).some(p=>p.sup)?"No <small>can be</small>":"No <small>can't be</small>"}</dd></div>
-    <div><dt>Accuracy</dt><dd>${(w.acc+B.acc).toFixed(B.acc?3:2)} ${dl(B.acc,3)}${B.acc?U("Part values are datamined by the wiki and may be from before the July 2026 weapon overhaul."):""}</dd></div>${B.rof?`<div><dt>Fire rate</dt><dd>${dl(B.rof,2)}<small> part value</small></dd></div>`:""}
-    <div><dt>Light</dt><dd>${B.light?"Flashlight <small>glares in fog</small>":"No"}</dd></div>
-  </dl>
-  <div class="att"><span><b>About parts.</b> Part numbers are datamined from the game files by the wiki. Accuracy and magazine size are what the wiki's data shows, so recoil and stability are left out. Since the July 2026 update, bigger magazines also reload slower. "lvl" is the weapon level a vendor needs before selling the part. Some built-in attachments (underbarrel launchers, bipods, bayonets) don't work yet.</span><span class="rk">Levelling a weapon by using it makes it noticeably more accurate, usually around level 20 to 30.</span>${AMMO_UNSURE[S.pammo]?`<span>${U(AMMO_UNSURE[S.pammo])} ${esc(AMMO_UNSURE[S.pammo])}</span>`:""}</div>`;
+  const B=build(w),mag=B.mag,am=AMMO[S.pammo];
 
   /* rig */
   const rig=RIGS.find(r=>r.n===S.rig)||RIGS[0];
@@ -785,16 +795,17 @@ function render(){
   const floor=Math.min(3*mag,300);
   let rounds=Math.max(floor,Math.ceil(total*per/step)*step);
   const sec=S.sec?WBY[S.sec]:null;
-  const SB=sec?build(Object.assign({},sec,{n:sec.n})):null;
-  let smag=sec?baseMag(sec):0,secMagIdx=-1;
-  $("secmagf").hidden=!(sec&&SB.by.MAG);
-  if(sec&&SB.by.MAG){const opts=SB.by.MAG,cur=S.smag[sec.n];const def=(opts.find(p=>p.cap===baseMag(sec))||{}).i;
-    $("secmag").innerHTML=(opts.some(p=>p.cap===baseMag(sec))?"":`<option value="-1">Stock magazine · ${baseMag(sec)} rds</option>`)+opts.map(p=>`<option value="${p.i}">${esc(plabel(p))}</option>`).join("");
-    const v=cur!=null&&opts.some(p=>p.i===cur)?cur:def!=null?def:-1;$("secmag").value=String(v);secMagIdx=v;smag=v>=0?PT(v).cap:baseMag(sec)}
+  const SB=sec?build(sec,"s"):null,smag=sec?SB.mag:0;
   // Any weapon fits the second slot (checked in-game). Pistol: a backup sidearm. Grenade launcher: about 2 per region.
   // Anything else is a second main gun that shares the fights: half the main formula, at least 2 mags.
   const secGL=sec&&sec.c==="GRL",secPST=sec&&sec.c==="PST",secLong=sec&&!secGL&&!secPST;
-  const secAmK=sec?(sec.ammo.includes(S.pammo)?S.pammo:sec.ammo[0]):null,sam=sec?AMMO[secAmK]:null;
+  const secAmK=sec?(sec.ammo.includes(S.sammo)?S.sammo:sec.ammo.includes(S.pammo)?S.pammo:sec.ammo[0]):null,sam=sec?AMMO[secAmK]:null;
+  $("sammof").hidden=!sec;
+  if(sec){$("sammo").innerHTML=sec.ammo.map(a=>`<option value="${a}">${esc(AMMO[a][0])} · ${AMMO[a][2]??"2?"} CU/round</option>`).join("");$("sammo").value=secAmK}
+  if(!sec)wtab="p";
+  $("wtab").hidden=!sec;
+  if(sec)$("wtab").innerHTML=[["p",w],["s",sec]].map(([t,g])=>`<button type="button" data-t="${t}" aria-pressed="${wtab===t}">${t==="p"?"Main":"Second"}<small>${esc(wName(g,false))}</small></button>`).join("");
+  wtab==="s"?drawGun(sec,SB,secAmK,"s"):drawGun(w,B,S.pammo,"p");
   const secStep=smag<=30?smag:10,secPer=sec?rpf(sec):0;
   const secRounds=!sec?0:secGL?Math.max(4,2*nR):secPST?Math.max(2*smag,Math.min(3*smag,60)):Math.max(Math.min(2*smag,200),Math.ceil(total*secPer*.5/secStep)*secStep);
   const regF=legs.filter(l=>l.k==="reg").reduce((s,l)=>s+legFights(l),0)*mul;
@@ -820,7 +831,7 @@ function render(){
   const gq=Math.max(1,+S.grenq||2);$("grenqf").hidden=!S.gren;$("gren").value=S.gren||"";$("grenq").innerHTML=[1,2,3,4,5,6].map(v=>`<option>${v}</option>`).join("");$("grenq").value=String(gq);
   if(S.gren&&GREN[S.gren])pack.push({n:S.gren,sub:S.gren==="Frag"?"":"not sold by vendors: loot or craft",q:gq,cu:gq*GREN[S.gren][0],kg:gq*GREN[S.gren][1]});
   const needLight=legs.some(l=>l.k==="reg"&&l.r.dark);
-  if(needLight&&!B.light)pack.push({n:"Rig Light",sub:"this region is dark; one often lies near the entrance, and the wiki also suggests a Tactical Camera",q:1,cu:0,kg:0,flag:1,eq:1,slot:"large item bin"});
+  if(needLight&&!B.light&&!(SB&&SB.light))pack.push({n:"Rig Light",sub:"this region is dark; one often lies near the entrance, and the wiki also suggests a Tactical Camera",q:1,cu:0,kg:0,flag:1,eq:1,slot:"large item bin"});
   const packed=pack.reduce((s,p)=>s+p.cu,0),packedKg=Math.round(pack.reduce((s,p)=>s+(p.kg||0),0)*10)/10;
   const eqUsed=pack.filter(p=>p.eq).length;
   const swapSel=p=>{const opts=p.swap==="food"?Object.keys(FOOD):Object.keys(HEAL);return `<select class="swap" id="sw-${p.swap}" data-sw="${p.swap}" aria-label="Swap ${p.swap==="food"?"food":"heal item"}">${opts.map(o=>`<option${o===p.n?" selected":""}>${esc(o)}</option>`).join("")}</select>`};
@@ -912,7 +923,7 @@ function render(){
   const items=[];const add=(n,label,note)=>items.push({n,label:label||iName(n),note:note||""});
   add(w.n,wName(w),"main weapon");B.picked.forEach(p=>add(p.n,null,(SLOTN[p.s]||"part").toLowerCase()+(p.lvl?` · weapon level ${p.lvl}`:"")));
   add(am[0],null,"ammo");
-  if(sec){add(sec.n,wName(sec),"second weapon");if(secMagIdx>=0)add(PT(secMagIdx).n,null,"second weapon magazine");if(secAmK!==S.pammo)add(sam[0],null,"ammo")}
+  if(sec){add(sec.n,wName(sec),"second weapon");SB.picked.forEach(p=>add(p.n,null,"second weapon · "+(SLOTN[p.s]||"part").toLowerCase()+(p.lvl?` · weapon level ${p.lvl}`:"")));if(secAmK!==S.pammo)add(sam[0],null,"ammo")}
   pack.filter(p=>p.swap||/Drill|Rig Light/.test(p.n)).forEach(p=>add(p.n));
   const needV={};
   const rowH=it=>{const v=vendOf(it.n),l=lootOf(it.n).slice(0,2);
@@ -944,9 +955,11 @@ $("viatun").addEventListener("change",e=>{S.viatun=+e.target.value;render()});
 $("mids").addEventListener("change",e=>{const k=e.target.dataset.k;if(k!=null){S.mids[k]=e.target.value;render()}});
 $("prim").addEventListener("change",e=>{S.prim=e.target.value;lastChg=null;render()});
 $("pammo").addEventListener("change",e=>{S.pammo=e.target.value;render()});
-$("parts").addEventListener("change",e=>{const k=e.target.dataset.s;if(!k)return;const w=WBY[S.prim];const A=build(w);S.parts[w.n]=Object.assign({},A.out,{[k]:+e.target.value});lastChg={w:w.n,h:diffHTML(w,A,build(w),k)};render()});
-$("secmag").addEventListener("change",e=>{if(S.sec){S.smag[S.sec]=+e.target.value;render()}});
-$("sec").addEventListener("change",e=>{S.sec=e.target.value;render()});
+$("parts").addEventListener("change",e=>{const k=e.target.dataset.s;if(!k)return;const t=wtab==="s"&&S.sec?"s":"p",w=WBY[t==="s"?S.sec:S.prim],key=t==="s"?"sparts":"parts";
+  const A=build(w,t);S[key]=Object.assign({},S[key],{[w.n]:Object.assign({},A.out,{[k]:+e.target.value})});lastChg={t,w:w.n,h:diffHTML(w,A,build(w,t),k)};render()});
+$("sammo").addEventListener("change",e=>{S.sammo=e.target.value;render()});
+$("wtab").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;wtab=b.dataset.t;render()});
+$("sec").addEventListener("change",e=>{S.sec=e.target.value;if(S.sec)wtab="s";lastChg=null;render()});
 $("rig").addEventListener("change",e=>{S.rig=e.target.value;render()});
 $("char").addEventListener("change",e=>{S.char=e.target.value;
   if(S.sec&&!gunOk(WBY[S.sec].c))S.sec="";if(!gunOk(WBY[S.prim].c)){S.prim="AK";lastChg=null}
